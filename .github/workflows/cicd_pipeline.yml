@@ -26,7 +26,5 @@ jobs:
     name: "Build JS Bundle"
     if: github.event_name == 'push' || github.event.pull_request.draft == false
     uses: nikitabelonogov/gh-action-test/.github/workflows/build_bundle.yml@master
-    permissions:
-      contents: write
     with:
       sha: ${{ github.event.pull_request.head.sha || github.event.after }}
