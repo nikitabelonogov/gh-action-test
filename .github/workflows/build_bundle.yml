@@ -27,7 +27,7 @@ jobs:
           ref: ${{ inputs.sha }}
 
       - name: Build distribution package
-        run: mkdir build
+        run: mkdir build && touch build/debug.txt
 
       # upload this build as artifact to current Action
       - name: Upload bundle
