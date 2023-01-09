@@ -10,6 +10,7 @@ on:
       - ready_for_review
     branches:
       - master
+      - develop
       - 'release/**'
 
 env:
@@ -23,14 +24,14 @@ jobs:
       pull-requests: write
     steps:
       - uses: hmarr/debug-action@v2.1.0
-      - uses: thehanimo/pr-title-checker@v1.3.5
-        name: "Validate PR's title"
+      - name: "Validate PR's title"
+        uses: thehanimo/pr-title-checker@v1.3.5
         with:
           GITHUB_TOKEN: ${{ github.token }}
           pass_on_octokit_error: false
           configuration_path: ".github/pr-title-checker-config.json"
-      - uses: release-drafter/release-drafter@v5.21.1
-        name: "Set PR's label based on title"
+      - name: "Set PR's label based on title"
+        uses: release-drafter/release-drafter@v5.21.1
         with:
           disable-releaser: true
           config-name: autolabeler.yml
