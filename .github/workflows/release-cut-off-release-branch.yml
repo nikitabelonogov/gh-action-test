@@ -152,6 +152,8 @@ jobs:
     with:
       version: ${{ needs.draft-new-release.outputs.next_develop_version }}
       branch: ${{ github.event.repository.default_branch }}
+    permissions:
+      contents: write
     secrets: inherit
 
   set-version-release-branch:
@@ -161,4 +163,6 @@ jobs:
     with:
       version: ${{ needs.draft-new-release.outputs.release_version }}
       branch: ${{ needs.draft-new-release.outputs.release_branch }}
+    permissions:
+      contents: write
     secrets: inherit
