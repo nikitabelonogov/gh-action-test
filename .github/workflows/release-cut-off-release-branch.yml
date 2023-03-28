@@ -147,7 +147,6 @@ jobs:
 #            }
 
       - name: Cut release branch
-        id: calculate_branch_name_and_version
         shell: bash
         run: |
           set -xeuo pipefail
