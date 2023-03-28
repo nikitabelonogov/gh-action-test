@@ -4,7 +4,7 @@
 package_name = 'label-studio'
 
 # Package version
-__version__ = '1.2.7dev'
+__version__ = '0.0.2dev'
 
 # pypi info
 __latest_version__ = None
