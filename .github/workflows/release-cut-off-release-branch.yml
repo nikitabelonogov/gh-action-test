@@ -146,7 +146,7 @@ jobs:
 #            }
 
   set-version-default-branch:
-    uses: nikitabelonogov/gh-action-test/.github/workflows/release-set-version.yml@develop
+    uses: nikitabelonogov/gh-action-test/.github/workflows/release-set-version.yml@master
     needs:
       - draft-new-release
     with:
@@ -155,7 +155,7 @@ jobs:
     secrets: inherit
 
   set-version-release-branch:
-    uses: nikitabelonogov/gh-action-test/.github/workflows/release-set-version.yml@develop
+    uses: nikitabelonogov/gh-action-test/.github/workflows/release-set-version.yml@master
     needs:
       - draft-new-release
     with:
