@@ -1,0 +1,18 @@
+name: "Selenium trigger"
+
+on:
+  workflow_call:
+
+jobs:
+  run_selenium_tests:
+    name: "Selenium tests"
+    needs:
+     - test
+    uses: nikitabelonogov/gh-action-test/.github/workflows/selenium_tests.yml@master
+    with:
+      test_version_ref: 'stable'
+      test_environment: 'dev'
+      test_application: 'enterprise'
+      url: ${{ needs.test.outputs.url }}
+      fflag_env: 'Test'
+    secrets: inherit
