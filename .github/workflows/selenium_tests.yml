@@ -86,7 +86,5 @@ jobs:
     name: "Selenium"
     timeout-minutes: ${{ inputs.timeout_minutes || 90 }}
     runs-on: ubuntu-latest
-    needs:
-      - developers_details
     steps:
       - uses: hmarr/debug-action@v2.1.0
