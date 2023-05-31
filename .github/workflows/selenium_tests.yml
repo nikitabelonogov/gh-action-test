@@ -74,7 +74,7 @@ jobs:
 
   selenium_tests:
     name: "Selenium"
-    timeout-minutes: ${{ parseInt(inputs.timeout_minutes) || 90 }}
+    timeout-minutes: ${{ {} + inputs.timeout_minutes || 90 }}
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
