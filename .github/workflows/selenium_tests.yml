@@ -1,0 +1,508 @@
+name: "Selenium"
+
+on:
+  schedule:
+    - cron: '0 4 * * 1-5'
+  workflow_call:
+    inputs:
+      test_version_ref:
+        required: true
+        type: string
+      test_environment:
+        required: true
+        type: string
+      test_application:
+        required: true
+        type: string
+      url:
+        required: true
+        type: string
+      fflag_env:
+        required: true
+        type: string
+      timeout_minutes:
+        required: true
+        type: number
+  workflow_dispatch:
+    inputs:
+      test_version_ref:
+        description: 'Ref or SHA'
+        required: true
+        type: string
+        default: 'stable'
+      test_environment:
+        description: 'Test environment'
+        required: true
+        type: choice
+        default: 'dev'
+        options:
+          - 'dev'
+          - 'qa'
+          - 'release'
+          - 'prod'
+      test_application:
+        description: 'Test application'
+        required: true
+        type: choice
+        default: 'enterprise'
+        options:
+          - 'enterprise'
+          - 'open-source-over-saas'
+      url:
+        description: 'Target url'
+        required: true
+        type: string
+        default: 'https://develop.dev.heartex.com/'
+      fflag_env:
+        description: 'Fflag env'
+        required: true
+        type: choice
+        default: 'Test'
+        options:
+          - 'Test'
+          - 'OnPremise'
+          - 'QA'
+          - 'Production'
+      timeout_minutes:
+        required: false
+        # this strange type is not included in schema, but required
+        type: string
+        default: 3
+        description: Configuration for the timeout-minutes parameter of the workflow.
+
+env:
+  JDK_VERSION: 17
+  JDK_DISTRIBUTION: temurin
+  DEFAULT_BRANCH: stable
+  DEFAULT_ENV: https://develop.dev.heartex.com/
+  TESTS_REPO: heartexlabs/label-studio-test-automation
+  SELENIUM_HUB_URL: selenium-grid.dev.heartex.com/wd/hub
+  RETRIES: 2
+  QA_SLACK_GROUPID: 'S047C5LCF0E'
+
+jobs:
+
+  developers_details:
+    uses: heartexlabs/label-studio-enterprise/.github/workflows/team_details.yml@develop
+    secrets: inherit
+
+  selenium_tests:
+    name: "Selenium"
+    timeout-minutes: ${{ inputs.timeout-minutes || 90 }}
+    runs-on: ubuntu-latest
+    needs:
+      - developers_details
+    steps:
+      - uses: hmarr/debug-action@v2.1.0
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.TESTS_REPO }}
+          token: ${{ secrets.GIT_PAT }}
+          ref: ${{ inputs.test_version_ref || env.DEFAULT_BRANCH }}
+          fetch-depth: 1
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JDK_DISTRIBUTION }}
+          java-version: ${{ env.JDK_VERSION }}
+
+      - name: Configure mvn cache
+        id: mvn-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-jdk-${{ env.JDK_DISTRIBUTION }}-${{ env.JDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Get test url
+        id: pre-step
+        run: |
+          set -xeuo pipefail
+          if [[ "${{ inputs.test_application || 'enterprise' }}" == "open-source-over-saas" ]]; then
+            echo "_test_url=open.source.url.in.ssa" >> $GITHUB_OUTPUT
+            echo "_runner_file=RunTestOpenSource" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" = "schedule" ]]; then
+            echo "_test_url=enterprise.url.${{ inputs.test_environment || 'dev' }}" >> $GITHUB_OUTPUT
+            echo "_runner_file=RunFullTest" >> $GITHUB_OUTPUT
+          else
+            echo "_test_url=enterprise.url.${{ inputs.test_environment || 'dev' }}" >> $GITHUB_OUTPUT
+            echo "_runner_file=RunTest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Prepare properties
+        env:
+          TESTS_GCP_KEY_JSON: ${{ secrets.TESTS_GCP_KEY_JSON }}
+          SELENIUM_GRID_USER: ${{ secrets.SELENIUM_GRID_USER }}
+          SELENIUM_GRID_PASSWORD: ${{ secrets.SELENIUM_GRID_PASSWORD }}
+          TESTS_AWS_ACCESS_KEY_ID: ${{ secrets.TESTS_AWS_ACCESS_KEY_ID }}
+          TESTS_AWS_SECRET_ACCESS_KEY: ${{ secrets.TESTS_AWS_SECRET_ACCESS_KEY }}
+          TESTS_IAM_AWS_ACCESS_KEY_ID: ${{ secrets.TESTS_IAM_AWS_ACCESS_KEY_ID }}
+          TESTS_IAM_AWS_SECRET_ACCESS_KEY: ${{ secrets.TESTS_IAM_AWS_SECRET_ACCESS_KEY }}
+          TESTS_AZURE_KEY: ${{ secrets.TESTS_AZURE_KEY }}
+        run: |
+          set -xeuo pipefail
+          
+          mkdir -p "./src/test/resources/propertyFiles"
+          
+          cat <<EOF > "./src/test/resources/propertyFiles/GoogleCloudCreds.json"
+          $TESTS_GCP_KEY_JSON
+          EOF
+          
+          cat <<EOF > "./src/test/resources/propertyFiles/run.properties"
+          webdriver=chrome
+          run.in.headless=false
+          confirm.version.on.test.start=false
+          run.mode=server-grid
+          threads.in.parallel=1
+          test.environment=${{ inputs.test_environment || 'dev' }}
+          test.application=${{ inputs.test_application || 'enterprise' }}
+          feature.flag.env=${{ inputs.fflag_env || 'Test' }}
+          EOF
+          
+          cat <<EOF > "./src/test/resources/propertyFiles/local.properties"
+          ${{ steps.pre-step.outputs._test_url }}=${{ inputs.url || env.DEFAULT_ENV }}
+
+          selenium.grid.hub.url=https://$SELENIUM_GRID_USER:$SELENIUM_GRID_PASSWORD@${{ env.SELENIUM_HUB_URL }}
+          server.grid.download.folder.path=file:///home/seluser/Downloads/
+
+          mailinator.url=https://www.mailinator.com/
+
+          config.files.path=./src/test/resources/configs
+          project.data.files.path=./src/test/resources/ProjectDataFiles
+          other.files.path=./src/test/resources/other
+          tasks.file.path.local=./src/test/resources/taskFiles
+          tasks.file.path.s3=https://htx-pub.s3.amazonaws.com/zTest/Auto
+
+          gcs.title=GCS_title
+          gc.source.bucket.name=heartex-test
+          gc.target.bucket.name=heartex-test-output
+          gcs.regex=.*json
+          google.cloud.base.url=https://storage.cloud.google.com
+          gc.target.regex=.*
+          credentials.files.path=./src/test/resources/propertyFiles
+          
+          s3.title=S3_title
+          s3.bucket.name=htx-pub
+          s3.regex=.*json
+          s3.access.key.id=$TESTS_AWS_ACCESS_KEY_ID
+          s3.secret.access.key=$TESTS_AWS_SECRET_ACCESS_KEY
+          s3.target.bucket.prefix=zTest/AutoOutput/
+          s3.iam.target.bucket.prefix=Automation/AutoOutput/
+          s3.iam.title=S3_IAM_title
+          s3.iam.bucket.name=sandbox2-test-bucket
+          s3.iam.regex=.*json
+          s3.iam.role.arn=arn:aws:iam::726004645192:role/RW_to_sandbox2_bucket
+          s3.iam.access.key.id=$TESTS_IAM_AWS_ACCESS_KEY_ID
+          s3.iam.secret.access.key=$TESTS_IAM_AWS_SECRET_ACCESS_KEY
+          
+          azure.iam.title=Azure_Source_Title
+          azure.container.name=test-auto
+          azure.regex=.*json
+          azure.account.name=labelstudio2
+          azure.account.key=$TESTS_AZURE_KEY
+          
+          
+          non.prod.domain=heartex.e2e
+          non.prod.user.pass=12345678
+          prod.domain=heartex.com
+          prod.user.pass=^:g}+NTK{3B;A8.y
+          disposable.email.domain=mailinator.com
+          ld.develop.sd.key=${{ secrets.LAUNCHDARKLY_SDK_DEVELOP_SDK_KEY }}
+          ld.onprem.sd.key=${{ secrets.LAUNCHDARKLY_SDK_ONPREMISES_SDK_KEY }}
+          ld.prod.sd.key=${{ secrets.LAUNCHDARKLY_SDK_PRODUCTION_SDK_KEY }}
+          gmail.username=selenium@heartex.com
+          gmail.password=yoldqpnzbqtdnqmy
+          EOF
+
+      - name: Build with Maven
+        run: mvn test-compile
+
+      - name: Run tests
+        id: run_tests
+        run: |
+          set -ex
+          
+          function calc_stats {
+            retry=$1
+            testsuite_xml_file='target/surefire-reports/testng-results.xml'
+          
+            if [[ -f $testsuite_xml_file ]]; then
+              line=$(grep '<testng-results ' "${testsuite_xml_file}")
+              regex='<testng-results ignored="([0-9]+)" total="([0-9]+)" passed="([0-9]+)" failed="([0-9]+)" skipped="([0-9]+)">'
+              if [[ $line =~ $regex ]]; then
+                _TOTAL=BASH_REMATCH[2]
+                _PASSED=BASH_REMATCH[3]
+                if [ "$retry" -gt "0" ]; then
+                  _TOTAL=0
+                fi
+                export TOTAL=$((${TOTAL:=0}+_TOTAL))
+                export PASSED=$((${PASSED:=0}+_PASSED))
+              fi
+            fi
+          }
+          
+          START_TIME=$(date +%s)
+          EXIT_CODE=1
+          RETRY_COUNTER=0
+          if mvn --batch-mode test '-Dtest=${{ steps.pre-step.outputs._runner_file }}'; then
+            EXIT_CODE=0
+            calc_stats 0
+          else
+            calc_stats 0
+            for i in {1..${{ env.RETRIES }}}; do
+              echo "Retry ${i}"
+              RETRY_COUNTER=$((RETRY_COUNTER+1))
+              cat 'target/rerun.txt' || true
+              if mvn --batch-mode test '-Dtest=RunTestRerun'; then
+                EXIT_CODE=0
+                calc_stats ${i}
+                break
+              fi
+              calc_stats ${i}
+            done
+          fi
+          END_TIME=$(date +%s)
+          ELAPSE=$(( $END_TIME - $START_TIME ))
+          echo "elapse_time=$((ELAPSE/60))m $((ELAPSE%60))s" >> $GITHUB_OUTPUT
+          echo "total=${TOTAL}" >> $GITHUB_OUTPUT
+          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
+          echo "failed=$((TOTAL-PASSED))" >> $GITHUB_OUTPUT
+          echo "retries=${RETRY_COUNTER}" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+
+      - name: Get test results
+        if: always()
+        id: results
+        env:
+          FAILED: ${{ steps.run_tests.outputs.failed }}
+        run: |
+          set -xeuo pipefail
+          
+          echo "long_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          
+          if [ -n "${FAILED}" ]; then
+            if [ "${FAILED}" = "0" ]; then
+              echo "status=PASSED" >> $GITHUB_OUTPUT
+              echo "color=09db80" >> $GITHUB_OUTPUT
+            else
+              echo "status=FAILED" >> $GITHUB_OUTPUT
+              echo "color=db0909" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "status=CANCELED" >> $GITHUB_OUTPUT
+            echo "color=f2f542" >> $GITHUB_OUTPUT
+          fi
+          
+          env_sha_long=$(curl -sSL ${{ inputs.url || env.DEFAULT_ENV }}/version | sed -E 's|</?pre>||g' | jq -r '."label-studio-enterprise-backend".commit')
+          echo "env_sha_long=$env_sha_long" >> $GITHUB_OUTPUT
+          echo "env_sha_short=$(echo $env_sha_long | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Upload Surefire report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Surefire report
+          path: target/surefire-reports/
+          retention-days: 10
+
+      - name: Upload Cucumber report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Cucumber report
+          path: target/cucumber-JVM-reports/
+          retention-days: 10
+
+      - name: Prepare Slack message
+        id: prepare-slack-message
+        if: always()
+        uses: actions/github-script@v6
+        env:
+          PR_BODY: '${{ github.event.pull_request.body }}'
+          COMMIT_MESSAGE: '${{ github.event.head_commit.message }}'
+        with:
+          github-token: ${{ secrets.GIT_PAT }}
+          script: |
+            const { repo, owner } = context.repo;
+            const user_details = ${{ needs.developers_details.outputs.details }};
+            let githubUser = '${{ github.event.head_commit.author.username || github.actor }}';
+            if (githubUser === 'robot-ci-heartex') {
+              let issue_body = '';
+              if ('${{ github.event_name }}' === 'push') {
+                const commitMatch = process.env.COMMIT_MESSAGE.match(/\(#(\d+)\)/g)
+                if (commitMatch && commitMatch.length > 0) {
+                  const commitPR = commitMatch[commitMatch.length - 1]
+                  const prNumber = commitPR.match(/\(#(\d+)\)/);
+                  if (prNumber && prNumber[1]) {
+                    const {data: issue} = await github.rest.issues.get({
+                      owner,
+                      repo,
+                      issue_number: prNumber[1],
+                    });
+                    if (issue.body) {
+                      issue_body = issue.body;
+                    }
+                  }
+                }
+              }
+              if ('${{ github.event_name }}' === 'pull_request_target') {
+                issue_body = process.env.PR_BODY;
+              }
+              const userMatch = issue_body.match(/Hi @(.*)!/);
+              if (userMatch && userMatch[1]) {
+                githubUser = userMatch[1];
+              }
+            }
+            const user = user_details.find(e => e.github.username === githubUser);
+            const slack_message_lines = [];
+            let slack_message_line = `Selenium tests results`;
+            if (user && '${{ github.event_name }}' !== 'schedule') {
+              slack_message_line += ` <@${user.slack.userid}>`;
+            }
+            slack_message_lines.push(slack_message_line);
+            if ('${{ steps.results.outputs.status }}' === 'FAILED' && '${{ github.event_name }}' !== 'workflow_dispatch') {
+              slack_message_lines.push(`<!subteam^${{ env.QA_SLACK_GROUPID }}>, tests are failed, please take a look`);
+            }
+            core.setOutput("slack_message_text", slack_message_lines.join('\n'));
+            core.setOutput("slack_message_text_single_line", slack_message_lines.join('\\n'));
+
+      - name: Get info about known issues
+        id: known_issues
+        env:
+          BASE_FILE: src/test/resources/reporting/known_issues.json
+        run: |
+          set -xeuo pipefail
+          
+          if cat $BASE_FILE | jq type 1>/dev/null; then
+            echo "TICKETS_BLOCKING_TESTS_LENGTH=$(jq -r '.tickets_blocking_tests | length' $BASE_FILE)" >> $GITHUB_OUTPUT
+            echo "TICKETS_BLOCKING_TESTS=$(jq -r '[.tickets_blocking_tests[].ticket] | join("\\n")' $BASE_FILE)" >> $GITHUB_OUTPUT
+            echo "TESTS_BLOCKED_TCS=$(jq -r '[.tickets_blocking_tests[].blocked_tcs] | join("\\n")' $BASE_FILE)" >> $GITHUB_OUTPUT
+          
+            echo "TICKETS_BLOCKING_PARTS_OF_TESTS_LENGTH=$(jq -r '.tickets_blocking_parts_of_tests | length' $BASE_FILE)" >> $GITHUB_OUTPUT
+            echo "TICKETS_BLOCKING_PARTS_OF_TESTS=$(jq -r '[.tickets_blocking_parts_of_tests[].ticket] | join("\\n")' $BASE_FILE)" >> $GITHUB_OUTPUT
+            echo "PARTS_TESTS_BLOCKED_TCS=$(jq -r '[.tickets_blocking_parts_of_tests[].blocked_tcs] | join("\\n")' $BASE_FILE)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate JSON payload
+        id: generate_optional_block
+        run: |
+          set -xeuo pipefail
+          OPTIONAL_BLOCK=""
+          if [[ ${{ steps.known_issues.outputs.TICKETS_BLOCKING_TESTS_LENGTH || 0 }} > 0 ]]; then
+            OPTIONAL_BLOCK=",{
+              \"mrkdwn_in\": [\"fields\"],
+              \"color\": \"#FED627\",
+              \"title\": \"TICKETS CURRENTLY BLOCKING AUTOMATION\",
+              \"fields\": [
+                {
+                  \"title\": \"Blocking tests\",
+                  \"value\": \"${{ steps.known_issues.outputs.TICKETS_BLOCKING_TESTS }}\",
+                  \"short\": true
+                },
+                {
+                  \"title\": \"Blocked TCs\",
+                  \"value\": \"${{ steps.known_issues.outputs.TESTS_BLOCKED_TCS }}\",
+                  \"short\": true
+                },
+                {
+                  \"title\": \"Blocking parts of tests\",
+                  \"value\": \"${{ steps.known_issues.outputs.TICKETS_BLOCKING_PARTS_OF_TESTS }}\",
+                  \"short\": true
+                },
+                {
+                  \"title\": \"Blocked TCs\",
+                  \"value\": \"${{ steps.known_issues.outputs.PARTS_TESTS_BLOCKED_TCS }}\",
+                  \"short\": true
+                }
+              ],
+              \"thumb_url\": \"https://htx-pub.s3.amazonaws.com/warning.png\"
+            }"
+          fi
+          echo "ADDITIONAL_PAYLOAD<<EOF" >> $GITHUB_ENV
+          echo "$OPTIONAL_BLOCK" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Post results to a Slack channel
+        if: always()
+        uses: slackapi/slack-github-action@v1.24
+        with:
+          channel-id: 'C03QKS5EABC'
+          payload: |
+            {
+              "attachments": [
+                {
+                  "pretext": "${{ steps.prepare-slack-message.outputs.slack_message_text_single_line }}",
+                  "color": "#${{ steps.results.outputs.color }}",
+                  "mrkdwn_in": ["fields"],
+                  "fields": [
+                    {
+                      "title": "Status",
+                      "short": true,
+                      "value": "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ steps.results.outputs.status }}>"
+                    },
+                    {
+                      "title": "Event type",
+                      "short": true,
+                      "value": "${{ github.event_name }}"
+                    },
+                    {
+                      "title": "Env",
+                      "short": true,
+                      "value": "${{ inputs.url || env.DEFAULT_ENV }}"
+                    },
+                    {
+                      "title": "LSE SHA",
+                      "short": true,
+                      "value": "<https://github.com/${{ github.repository }}/commit/${{ steps.results.outputs.env_sha_long }}|${{ steps.results.outputs.env_sha_short }}>"
+                    },
+                    {
+                      "title": "Test env",
+                      "short": true,
+                      "value": "${{ inputs.test_environment || 'dev' }}"
+                    },
+                    {
+                      "title": "Test app",
+                      "short": true,
+                      "value": "${{ inputs.test_application || 'enterprise' }}"
+                    },
+                    {
+                      "title": "Time taken",
+                      "short": true,
+                      "value": "${{ steps.run_tests.outputs.elapse_time }}"
+                    },
+                    {
+                      "title": "Tests SHA",
+                      "short": true,
+                      "value": "<https://github.com/${{ env.TESTS_REPO }}/commit/${{ steps.results.outputs.long_sha }}|${{ steps.results.outputs.short_sha }}>"
+                    },
+                    {
+                      "title": "Total",
+                      "short": true,
+                      "value": "${{ steps.run_tests.outputs.total }}"
+                    },
+                    {
+                      "title": "Passed",
+                      "short": true,
+                      "value": "${{ steps.run_tests.outputs.passed }}"
+                    },
+                    {
+                      "title": "Failed",
+                      "short": true,
+                      "value": "${{ steps.run_tests.outputs.failed }}"
+                    },
+                    {
+                      "title": "Retries",
+                      "short": true,
+                      "value": "${{ steps.run_tests.outputs.retries }}"
+                    }
+                  ]
+                }${{ env.ADDITIONAL_PAYLOAD }}
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
