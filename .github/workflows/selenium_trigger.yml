@@ -1,7 +1,7 @@
 name: "Selenium trigger"
 
 on:
-  workflow_call:
+  workflow_dispatch:
 
 jobs:
   run_selenium_tests:
