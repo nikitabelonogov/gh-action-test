@@ -6,8 +6,6 @@ on:
 jobs:
   run_selenium_tests:
     name: "Selenium tests"
-    needs:
-     - test
     uses: nikitabelonogov/gh-action-test/.github/workflows/selenium_tests.yml@master
     with:
       test_version_ref: 'stable'
