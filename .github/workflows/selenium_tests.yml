@@ -82,10 +82,6 @@ env:
 
 jobs:
 
-  developers_details:
-    uses: heartexlabs/label-studio-enterprise/.github/workflows/team_details.yml@develop
-    secrets: inherit
-
   selenium_tests:
     name: "Selenium"
     timeout-minutes: ${{ inputs.timeout_minutes || 90 }}
