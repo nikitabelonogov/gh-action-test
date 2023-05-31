@@ -70,21 +70,11 @@ on:
         default: "30"
         description: Configuration for the timeout-minutes parameter of the workflow.
 
-env:
-  JDK_VERSION: 17
-  JDK_DISTRIBUTION: temurin
-  DEFAULT_BRANCH: stable
-  DEFAULT_ENV: https://develop.dev.heartex.com/
-  TESTS_REPO: heartexlabs/label-studio-test-automation
-  SELENIUM_HUB_URL: selenium-grid.dev.heartex.com/wd/hub
-  RETRIES: 2
-  QA_SLACK_GROUPID: 'S047C5LCF0E'
-
 jobs:
 
   selenium_tests:
     name: "Selenium"
-    timeout-minutes: ${{ inputs.timeout_minutes || 90 }}
+    timeout-minutes: ${{ parseInt(inputs.timeout_minutes) || 90 }}
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
