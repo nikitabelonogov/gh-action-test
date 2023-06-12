@@ -2,7 +2,7 @@ name: "Update Feature Flags"
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '8 * * * *'
   workflow_call:
     inputs:
       ref:
