@@ -3,8 +3,11 @@ name: "TEST"
 on:
   workflow_dispatch:
 
+env:
+  GH_REPO: nikitabelonogov/gh-action-test
+
 jobs:
 
   build_bundle:
     name: "TEST"
-    uses: "${{ github.repository }}/.github/workflows/test2.yaml@master"
+    uses: "${{ env.GH_REPO }}/.github/workflows/test2.yaml@master"
