@@ -7,4 +7,4 @@ jobs:
 
   build_bundle:
     name: "TEST"
-    uses: ./.github/workflows/test2.yaml
+    uses: "${{ github.repository }}/.github/workflows/test2.yaml@master"
