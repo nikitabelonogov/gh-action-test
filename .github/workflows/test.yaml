@@ -1,0 +1,12 @@
+name: "TEST"
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build_bundle:
+    name: "TEST"
+    uses: .github/workflows/test2.yaml@master
+    with:
+      sha: ${{ github.event.pull_request.head.sha || github.event.after }}
