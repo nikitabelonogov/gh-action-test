@@ -40,11 +40,11 @@ jobs:
           service_account: 'github-runner@labelstudio-prod.iam.gserviceaccount.com'
 
       - name: Configure kubeconfig
-        shell: bash
-        run: |
-          gcloud container clusters get-credentials '${{ env.GCP_GKE_CLUSTER_NAME }}' \
-            --region '${{ env.GCP_GKE_REGION }}' \
-            --project '${{ env.GCP_GKE_PROJECT }}'
-          
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: '${{ env.GCP_GKE_CLUSTER_NAME }}'
+          location: '${{ env.GCP_GKE_REGION }}'
+          project_id: '${{ env.GCP_GKE_PROJECT }}'
+
       - name: Upgrade
         run: kubectl -n '${{ env.HELM_RELEASE_NAMESPACE }}' set image deployment/query-api query-api=${{ env.IMAGE_NAME }}:${{ inputs.image_version }}
