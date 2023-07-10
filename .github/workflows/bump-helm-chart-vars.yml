@@ -52,6 +52,7 @@ on:
 
 env:
   HELM_CHART_VARS_REPO_NAME: 'infra'
+  IMAGE_NAME: "${{ vars.DOCKERHUB_ORG }}/label-studio-query-vectordb"
 
 jobs:
   bump-helm-chart:
@@ -104,7 +105,7 @@ jobs:
           VALUES_FILE_PATH: "vars/${{ inputs.domain }}/k8s/${{ inputs.namespace }}/${{ inputs.values_file }}"
           DOCKER_IMAGE_VERSION: ${{ inputs.docker_image_version }}
         run: |
-          yq e --inplace '${{ inputs.yaml_key }} |= "${{ inputs.docker_image_version }}"' "${VALUES_FILE_PATH}"
+          yq e --inplace '${{ inputs.yaml_key }} |= "${{ env.IMAGE_NAME }}:${{ inputs.docker_image_version }}"' "${VALUES_FILE_PATH}"
           cat "${VALUES_FILE_PATH}"
 
       - name: Commit and Push
