@@ -19,5 +19,5 @@ jobs:
       domain: "co-dev-01.heartex.com"
       namespace: "milvus-dev"
       values_file: "query-api/deployment.yaml"
-      yaml_key: "spec.template.spec.containers[0].image"
+      yaml_key: ".spec.template.spec.containers[0].image"
     secrets: inherit
