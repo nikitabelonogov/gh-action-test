@@ -96,7 +96,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          repository: "${{ github.repository_owner }}/${{ env.HELM_CHART_VARS_REPO_NAME }}"
+          repository: "heartexlabs/${{ env.HELM_CHART_VARS_REPO_NAME }}"
           token: ${{ secrets.GIT_PAT }}
 
       - name: Edit Vector DB values
