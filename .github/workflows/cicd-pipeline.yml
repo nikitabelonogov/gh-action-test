@@ -1,0 +1,26 @@
+name: "CI/CD Pipeline"
+
+on:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+
+  bump_helm_chart_vars:
+    name: "Bump Helm Chart Vars"
+    uses: ./.github/workflows/bump-helm-chart-vars.yml
+    needs:
+      - release_pipeline
+      - promote_docker_image
+    with:
+      docker_image_version: 20230705.090127-master-58dbb79
+      domain: "co-dev-01.heartex.com"
+      namespace: "milvus-dev"
+      values_file: "query-api/deployment.yaml"
+      yaml_key: "spec.template.spec.containers[0].image"
+    secrets: inherit
