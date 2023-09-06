@@ -125,7 +125,6 @@ jobs:
                 head: head_sha,
             });
             
-            let failed = []
             for (let submodule of submodules) {
                 let status = {}
                 if (lsCompare.files.some(e => e.filename === submodule.file_path)) {
@@ -135,13 +134,8 @@ jobs:
                 }
             
                 if (status[0] === false) {
-                    failed.push(submodule)
                     core.setFailed(`${submodule.owner}/${submodule.repo}: ${status[1]}`)
                 } else {
                     core.info(`${submodule.owner}/${submodule.repo}: ${status[1]}`)
                 }
-            }
-            
-            if (failed.length !== 0) {
-                throw `Versions for ${failed.map(e => e.repo).toString()} failed the validation`;
             }
