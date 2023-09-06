@@ -136,6 +136,6 @@ jobs:
                 if (status[0] === false) {
                     core.setFailed(`${submodule.owner}/${submodule.repo}: ${status[1]}`)
                 } else {
-                    core.info(`${submodule.owner}/${submodule.repo}: ${status[1]}`)
+                    core.notice(`${submodule.owner}/${submodule.repo}: ${status[1]}`)
                 }
             }
