@@ -13,6 +13,7 @@ on:
         required: false
 
 env:
+  REQUIRED_CHECKS: "Tests / Selenium, Tests / Locust, Submodules/deps" # keep selenium as [0] element, no space between elements
   ACTIONS_STEP_DEBUG: '${{ secrets.ACTIONS_STEP_DEBUG }}'
 
 jobs:
