@@ -1,0 +1,78 @@
+name: "CI/CD Pipeline"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - master
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+
+#  pytest:
+#    name: "Tests"
+#    uses: ./.github/workflows/tests.yml
+#    with:
+#      head_sha: ${{ github.event.pull_request.head.sha || github.event.after }}
+#    secrets: inherit
+#
+#  build:
+#    name: "Build"
+#    uses: ./.github/workflows/docker-build.yml
+#    permissions:
+#      contents: read
+#      checks: write
+#    with:
+#      sha: ${{ github.event.pull_request.head.sha || github.event.after }}
+#      branch_name: ${{ github.event.pull_request.head.ref || github.ref_name }}
+#    secrets: inherit
+#
+#  bump_helm_chart_vars:
+#    name: "Bump Helm Chart Vars"
+#    if: github.event_name == 'push'
+#    uses: ./.github/workflows/bump-helm-chart-vars.yml
+#    needs:
+#      - build
+#    with:
+#      docker_image_version: ${{ needs.build.outputs.image_version }}
+#      domain: "co-dev-02.heartex.com"
+#      namespace: "milvus"
+#      values_file: "query-api/deployment.yaml"
+#      yaml_key: ".spec.template.spec.containers[0].image"
+#    secrets: inherit
+#
+#  deploy:
+#    name: "Deploy"
+#    if: github.event_name == 'push'
+#    uses: ./.github/workflows/deploy.yml
+#    needs:
+#      - build
+#    permissions:
+#      id-token: write
+#      contents: read
+#      deployments: write
+#    with:
+#      image_version: ${{ needs.build.outputs.image_version }}
+#    secrets: inherit
+
+  deploy-acrgocd:
+    name: "Deploy"
+    if: github.event_name == 'pull_request_target'
+    uses: ./.github/workflows/create_argocd_app.yml
+    needs:
+      - build
+    with:
+      image_version: ${{ needs.build.outputs.image_version }}
+      branch_name: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    secrets: inherit
