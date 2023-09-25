@@ -1,6 +1,9 @@
 name: "Create ArgoCD Application"
 
 on:
+  push:
+    branches:
+      - master
   workflow_call:
     inputs:
       image_version:
@@ -22,6 +25,8 @@ on:
 
 env:
   INFRA_REPO: "nikitabelonogov/gh-action-test"
+  TEMPLATE_DIR: "vars/gcp/co-dev-02.heartex.com/k8s/milvus/templates/query-api"
+  APP_DIR: "vars/gcp/co-dev-02.heartex.com/k8s/milvus/query-api"
 
 jobs:
 
@@ -29,10 +34,6 @@ jobs:
     name: "Environment"
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      deployments: write
     steps:
       - uses: hmarr/debug-action@v2.1.0
 
@@ -47,4 +48,7 @@ jobs:
         shell: bash
         run: |
           set -xeuo pipefail
-          git pull
+          
+          ls "${ env.TEMPLATE_DIR }"
+          
+          git status
