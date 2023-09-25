@@ -42,7 +42,7 @@ jobs:
         with:
           repository: "HumanSignal/infra"
           token: ${{ secrets.GIT_PAT }}
-          depth: 1
+          fetch-depth: 1
 
       - name: "Validate: base_branch contains a commit"
         shell: bash
