@@ -36,125 +36,15 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v2.1.0
 
-      - name: Commit
-        uses: actions/github-script@v6
-        env:
-          INFRA_REPO: ${{ env.INFRA_REPO }}
-          BRANCH: ${{ inputs.branch_name }}
-          IMAGE: ${{ inputs.image_version }}
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          github-token: ${{ secrets.GIT_PAT }}
-          script: |
-            const [owner, repo] = process.env.INFRA_REPO.split('/');
-            const branch = process.env.BRANCH;
-            const image = process.env.IMAGE;
-            
-            const domain = 'co-dev-02.heartex.com';
-            const namespace = 'milvus';
-            
-            const host = `${branch}-query-api.${namespace}.${domain}`;
-            const template_path = `vars/gcp/${domain}/k8s/${namespace}/${branch}-query-api/kustomization.yaml`;
-            const template = `
-            apiVersion: kustomize.config.k8s.io/v1beta1
-            kind: Kustomization
-            
-            resources:
-            - ../../../../../../base/manifests/query-api
-            
-            namePrefix: ${branch}-
-            
-            patches:
-              - patch: |-
-                  apiVersion: apps/v1
-                  kind: Deployment
-                  metadata:
-                    name: query-api
-                  spec:
-                    template:
-                      spec:
-                        containers:
-                          - name: query-api
-                            image: ${image}
-                            env:
-                              - name: MILVUS_URL
-                                value: "http://10.0.0.94:19530"
-                              - name: GOOGLE_PROJECT_ID
-                                value: "aqueous-cortex-307813"
-              - patch: |-
-                  apiVersion: networking.k8s.io/v1
-                  kind: Ingress
-                  metadata:
-                    name: query-api
-                    annotations:
-                      cert-manager.io/cluster-issuer: letsencrypt-cluster-issuer
-                  spec:
-                    tls:
-                      - hosts:
-                          - "${host}"
-                        secretName: "${host}"
-            
-            replacements:
-              - source:
-                  kind: Ingress
-                  name: query-api
-                  fieldPath: spec.tls.0.hosts.0
-                targets:
-                  - select:
-                      kind: Ingress
-                      name: query-api
-                    fieldPaths:
-                      - spec.rules.0.host
-                    options:
-                      create: true
-            `;
-            
-            const {data: repository} = await github.rest.repos.get({
-              owner: owner,
-              repo: repo,
-            });
-            
-            const {data: commits} = await github.rest.repos.listCommits({
-              owner: owner,
-              repo: repo,
-              sha: repository.default_branch,
-            });
-            
-            const files = [
-              {
-                name: template_path,
-                contents: template,
-              },
-            ];
-            
-            const commitableFiles = files.map(({name, contents}) => {
-              return {
-                path: name,
-                mode: '100644',
-                type: 'commit',
-                content: contents,
-              }
-            })
-            
-            const {data: currentTree} = await github.rest.git.createTree({
-              owner: owner,
-              repo: repo,
-              tree: commitableFiles,
-              base_tree: commits[0].sha,
-              message: `Create ${branch}-query-api\nWorkflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`,
-              parents: [commits[0].sha],
-            });
-            
-            const {data: newCommit} = await github.rest.git.createCommit({
-              owner: owner,
-              repo: repo,
-              tree: currentTree.sha,
-              message: `Create ${branch}-query-api\nWorkflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`,
-              parents: [commits[0].sha],
-            });
-            
-            await github.rest.git.updateRef({
-              owner: owner,
-              repo: repo,
-              sha: newCommit.sha,
-              ref: `heads/${repository.default_branch}`,
-            });
+          repository: "HumanSignal/infra"
+          token: ${{ secrets.GIT_PAT }}
+          depth: 1
+
+      - name: "Validate: base_branch contains a commit"
+        shell: bash
+        run: |
+          set -xeuo pipefail
+          git pull
