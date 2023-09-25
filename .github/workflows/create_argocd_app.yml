@@ -41,7 +41,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: ${{ INFRA_REPO }}
+          repository: ${{ env.INFRA_REPO }}
           token: ${{ secrets.GIT_PAT }}
           fetch-depth: 1
 
@@ -49,7 +49,7 @@ jobs:
         shell: bash
         env:
           DOCKER_IMAGE_VERSION: ${{ inputs.docker_image_version }}
-          BRANCH: ${{ branch_name }}
+          BRANCH: ${{ inputs.branch_name }}
         run: |
           set -xeuo pipefail
           
@@ -71,23 +71,23 @@ jobs:
           git status
           git commit -m "Create ${NAMESPACE}/${APP_NAME}" -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
 
-      - name: Push
-        shell: bash
-        run: |
-          set -xeuo pipefail
-          
-          attempt=0
-          max_attempts=5
-          while ! git push; do
-            attempt=$((attempt+1))
-            if [ $attempt -ge $max_attempts ]; then
-              echo "Max attempts reached. Exiting."
-              exit 1
-            fi
-            sleep_time=$((RANDOM % 10 + 1))
-            echo "Push failed. Attempting retry (${attempt}/${max_attempts}) in ${sleep_time} seconds..."
-            sleep $sleep_time
-            git pull --rebase
-          done
-          
-          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+#      - name: Push
+#        shell: bash
+#        run: |
+#          set -xeuo pipefail
+#
+#          attempt=0
+#          max_attempts=5
+#          while ! git push; do
+#            attempt=$((attempt+1))
+#            if [ $attempt -ge $max_attempts ]; then
+#              echo "Max attempts reached. Exiting."
+#              exit 1
+#            fi
+#            sleep_time=$((RANDOM % 10 + 1))
+#            echo "Push failed. Attempting retry (${attempt}/${max_attempts}) in ${sleep_time} seconds..."
+#            sleep $sleep_time
+#            git pull --rebase
+#          done
+#
+#          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
