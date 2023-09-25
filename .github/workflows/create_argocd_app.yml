@@ -1,12 +1,9 @@
 name: "Create ArgoCD Application"
 
 on:
-  push:
-    branches:
-      - master
   workflow_call:
     inputs:
-      image_version:
+      docker_image_version:
         required: true
         type: string
       branch_name:
@@ -14,7 +11,7 @@ on:
         type: string
   workflow_dispatch:
     inputs:
-      image_version:
+      docker_image_version:
         description: 'Docker image version'
         required: true
         type: string
@@ -24,9 +21,13 @@ on:
         type: string
 
 env:
-  INFRA_REPO: "nikitabelonogov/gh-action-test"
+  INFRA_REPO: "HumanSignal/infra"
+  APP_BASE_NAME: "query-api"
+  NAMESPACE: "milvus"
+  DOMAIN: "co-dev-02.heartex.com"
   TEMPLATE_DIR: "vars/gcp/co-dev-02.heartex.com/k8s/milvus/templates/query-api"
-  APP_DIR: "vars/gcp/co-dev-02.heartex.com/k8s/milvus/query-api"
+  APPS_DIR: "vars/gcp/co-dev-02.heartex.com/k8s/milvus"
+  DOCKER_IMAGE_NAME: "${{ vars.DOCKERHUB_ORG }}/label-studio-query-vectordb"
 
 jobs:
 
@@ -40,15 +41,53 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: "HumanSignal/infra"
+          repository: ${{ INFRA_REPO }}
           token: ${{ secrets.GIT_PAT }}
           fetch-depth: 1
 
-      - name: "Validate: base_branch contains a commit"
+      - name: Commit
+        shell: bash
+        env:
+          DOCKER_IMAGE_VERSION: ${{ inputs.docker_image_version }}
+          BRANCH: ${{ branch_name }}
+        run: |
+          set -xeuo pipefail
+          
+          APP_NAME="${BRANCH}-${APP_BASE_NAME}"
+          APP_DIR="${APPS_DIR}/${APP_NAME}"
+          
+          export DOCKER_IMAGE="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}"
+          export HOSTNAME="${BRANCH}-${APP_BASE_NAME}.${NAMESPACE}.${DOMAIN}"
+          export RELEASE_NAME="${BRANCH}"
+          
+          mkdir -p "${APP_DIR}"
+          
+          for template_file_name in $(ls "${TEMPLATE_DIR}"); do
+            file_name="${template_file_name%.template}"
+            envsubst < "${TEMPLATE_DIR}/${template_file_name}" > "${APP_DIR}/${file_name}"
+          done
+          
+          git add "${APP_DIR}"
+          git status
+          git commit -m "Create ${NAMESPACE}/${APP_NAME}" -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+
+      - name: Push
         shell: bash
         run: |
           set -xeuo pipefail
           
-          ls "${{ env.TEMPLATE_DIR }}"
+          attempt=0
+          max_attempts=5
+          while ! git push; do
+            attempt=$((attempt+1))
+            if [ $attempt -ge $max_attempts ]; then
+              echo "Max attempts reached. Exiting."
+              exit 1
+            fi
+            sleep_time=$((RANDOM % 10 + 1))
+            echo "Push failed. Attempting retry (${attempt}/${max_attempts}) in ${sleep_time} seconds..."
+            sleep $sleep_time
+            git pull --rebase
+          done
           
-          git status
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
