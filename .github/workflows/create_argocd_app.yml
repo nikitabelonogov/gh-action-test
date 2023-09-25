@@ -49,6 +49,6 @@ jobs:
         run: |
           set -xeuo pipefail
           
-          ls "${ env.TEMPLATE_DIR }"
+          ls "${{ env.TEMPLATE_DIR }}"
           
           git status
