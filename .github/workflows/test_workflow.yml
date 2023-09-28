@@ -1,0 +1,59 @@
+name: "Test Workflow"
+
+on:
+  workflow_dispatch:
+    inputs:
+      input:
+        description: 'input'
+        type: string
+        required: true
+
+env:
+  REQUIRED_CHECKS: "Tests / Selenium, Tests / Locust, Submodules/deps" # keep selenium as [0] element, no space between elements
+  ACTIONS_STEP_DEBUG: '${{ secrets.ACTIONS_STEP_DEBUG }}'
+
+jobs:
+  validate_submodules_and_dependencies:
+    name: "Submodules/deps"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v2.1.0
+
+      - name: Details
+        id: details
+        shell: bash
+        run: |
+          set -xeuo pipefail
+          
+          case "${{ inputs.input }}" in
+            "*/dm2")
+              echo "frontend_module_dist=${{ env.STATIC_DIST }}/dm" >> $GITHUB_OUTPUT
+              ;;
+            "*/label-studio-frontend")
+              echo "frontend_module_dist=${{ env.STATIC_DIST }}/lsf" >> $GITHUB_OUTPUT
+              echo "build_lsf_docs=true" >> $GITHUB_OUTPUT
+              ;;
+            "*/label-studio-sdk")
+              echo "requirements_dist=true" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo ':error::Repository ${{  inputs.input }} is not supported'
+              exit 1
+              ;;
+          esac
+
+      - name: frontend Commit static
+        if: steps.details.outputs.frontend_module_dist
+        shell: bash
+        run: |
+          set -xeuo pipefail
+
+          echo "${{ steps.details.outputs.frontend_module_dist }}"
+
+      - name: requirements Commit static
+        if: steps.details.outputs.requirements_dist
+        shell: bash
+        run: |
+          set -xeuo pipefail
+
+          echo "${{ steps.details.outputs.requirements_dist }}"
