@@ -13,8 +13,8 @@ env:
   ACTIONS_STEP_DEBUG: '${{ secrets.ACTIONS_STEP_DEBUG }}'
 
 jobs:
-  validate_submodules_and_dependencies:
-    name: "Submodules/deps"
+  test:
+    name: "test"
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
@@ -26,14 +26,14 @@ jobs:
           set -xeuo pipefail
           
           case "${{ inputs.input }}" in
-            "*/dm2")
+            */dm2)
               echo "frontend_module_dist=${{ env.STATIC_DIST }}/dm" >> $GITHUB_OUTPUT
               ;;
-            "*/label-studio-frontend")
+            */label-studio-frontend)
               echo "frontend_module_dist=${{ env.STATIC_DIST }}/lsf" >> $GITHUB_OUTPUT
               echo "build_lsf_docs=true" >> $GITHUB_OUTPUT
               ;;
-            "*/label-studio-sdk")
+            */label-studio-sdk)
               echo "requirements_dist=true" >> $GITHUB_OUTPUT
               ;;
             *)
