@@ -1,7 +1,17 @@
 name: "Test Workflow"
 
 on:
-  push:
+  pull_request_target:
+    types:
+      - converted_to_draft
+      - ready_for_review
+    branches:
+      - master
+      - 'lse-release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+
 
 jobs:
   test:
@@ -10,25 +20,63 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v2.1.0
 
-      - name: Check for merge conflict
-        id: check-conflict
-        shell: bash
-        run: |
-          set -xeuo pipefail
-          if false; then
-            echo "merge_conflict=false" >> $GITHUB_OUTPUT
-          else
-            echo "merge_conflict=true" >> $GITHUB_OUTPUT
-          fi
+      - name: Find submodules PRs
+        id: submodules-prs
+        uses: actions/github-script@v6
+        env:
+          EVENT_ACTION: ${{ github.event.action }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref || github.ref_name }}
+        with:
+          github-token: ${{ secrets.GIT_PAT }}
+          script: |
+            const drafted = process.env.EVENT_ACTION == 'converted_to_draft';
+            const branch_name = process.env.BRANCH_NAME;
+            
+            let submodules = [
+              {owner: owner, repo: 'label-studio-query-vectordb'}
+            ]
+            
+            let pr_node_ids = [];
+            for (let submodule of submodules) {
+              const pullRequests = await github.paginate(
+                github.rest.pulls.list,
+                {
+                  owner: submodule.owner,
+                  repo: submodule.repo,
+                  state: 'open',
+                  per_page: 100
+                },
+                (response) => response.data
+              );
+              for (let pullRequest of pullRequests) {
+                if (pullRequest.head.ref === ) {
+                  if (pullRequest.draft !== drafted) {
+                    pr_node_ids.push(pullRequest.node_id);
+                  }
+                }
+              }
+            }
+            
+            core.setOutput('pr_node_ids', pr_node_ids.join('\n'));
 
-      - name: echo merge conflict
-        if: ${{ steps.check-conflict.outputs.merge_conflict }}
+      - name: Convert PRs
+        if: steps.submodules-prs.outputs.pr_node_ids
+        id: ready-for-review-pr
         shell: bash
+        env:
+          GIT_PAT: ${{ secrets.GIT_PAT }}
+          EVENT_ACTION: ${{ github.event.action }}
+          NODE_IDS: ${{ steps.submodules-prs.outputs.pr_node_ids }}
         run: |
-          echo '${{ steps.check-conflict.outputs.merge_conflict }}'
-
-      - name: echo merge conflict
-        if: ${{ !steps.check-conflict.outputs.merge_conflict }}
-        shell: bash
-        run: |
-          echo '${{ steps.check-conflict.outputs.merge_conflict }}'
+          echo "${GIT_PAT}" | gh auth login --with-token
+          for id in ${NODE_IDS}; do
+            if [ "${EVENT_ACTION}" = 'converted_to_draft' ]; then
+              gh api graphql \
+                -F id="${id}" \
+                -f query='mutation($id: ID!) {markPullRequestReadyForReview(input:{pullRequestId: $id}) {pullRequest{id}}}'
+            else
+              gh api graphql \
+                -F id="${id}" \
+                -f query='mutation($id: ID!) {convertPullRequestToDraft(input:{pullRequestId: $id}) {pullRequest{id isDraft}}}'
+            fi              
+          done
