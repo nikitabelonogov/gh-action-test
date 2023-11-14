@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -xeuo pipefail
-          echo "merge_conflict=+<<<<<<< .our" >> $GITHUB_OUTPUT
+          echo "merge_conflict=true" >> $GITHUB_OUTPUT
 
       - name: echo merge conflict
         shell: bash
