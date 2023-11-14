@@ -73,10 +73,10 @@ jobs:
             if [ "${EVENT_ACTION}" = 'converted_to_draft' ]; then
               gh api graphql \
                 -F id="${id}" \
-                -f query='mutation($id: ID!) {markPullRequestReadyForReview(input:{pullRequestId: $id}) {pullRequest{id}}}'
+                -f query='mutation($id: ID!) {convertPullRequestToDraft(input:{pullRequestId: $id}) {pullRequest{id isDraft}}}'
             else
               gh api graphql \
                 -F id="${id}" \
-                -f query='mutation($id: ID!) {convertPullRequestToDraft(input:{pullRequestId: $id}) {pullRequest{id isDraft}}}'
+                -f query='mutation($id: ID!) {markPullRequestReadyForReview(input:{pullRequestId: $id}) {pullRequest{id}}}'
             fi              
           done
