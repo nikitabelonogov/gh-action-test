@@ -49,7 +49,7 @@ jobs:
                 (response) => response.data
               );
               for (let pullRequest of pullRequests) {
-                if (pullRequest.head.ref === ) {
+                if (pullRequest.head.ref === branch_name) {
                   if (pullRequest.draft !== drafted) {
                     pr_node_ids.push(pullRequest.node_id);
                   }
