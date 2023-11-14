@@ -18,6 +18,13 @@ jobs:
           echo "merge_conflict=true" >> $GITHUB_OUTPUT
 
       - name: echo merge conflict
+        if: ${{ steps.check-conflict.outputs.merge_conflict }}
+        shell: bash
+        run: |
+          echo '${{ steps.check-conflict.outputs.merge_conflict }}'
+
+      - name: echo merge conflict
+        if: ${{ !steps.check-conflict.outputs.merge_conflict }}
         shell: bash
         run: |
           echo '${{ steps.check-conflict.outputs.merge_conflict }}'
