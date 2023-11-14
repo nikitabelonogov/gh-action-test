@@ -33,7 +33,7 @@ jobs:
             const branch_name = process.env.BRANCH_NAME;
             
             let submodules = [
-              {owner: owner, repo: 'label-studio-query-vectordb'}
+              {owner: 'HumanSignal', repo: 'label-studio-query-vectordb'}
             ]
             
             let pr_node_ids = [];
