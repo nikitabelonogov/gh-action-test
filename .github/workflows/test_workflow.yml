@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -xeuo pipefail
-          if False; then
+          if false; then
             echo "merge_conflict=false" >> $GITHUB_OUTPUT
           else
             echo "merge_conflict=true" >> $GITHUB_OUTPUT
