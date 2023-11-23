@@ -15,6 +15,7 @@ jobs:
 
       - name: Commit and push
         id: commit_and_push
+        continue-on-error: true
         shell: bash
         run: |
           cat << EOF > "/tmp/info_commit_msg"
