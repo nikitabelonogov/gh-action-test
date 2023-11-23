@@ -25,7 +25,12 @@ jobs:
           $(date '+%b %d, %Y')
           EOF
           
-          echo "commit_msg_file=$(cat /tmp/info_commit_msg)" >> $GITHUB_OUTPUT
+          {
+            echo "commit_msg_file<<EOF"
+            cat /tmp/info_commit_msg
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
           echo "COMMIT_MSG_FILE<<EOF" >> $GITHUB_ENV
           echo "$(cat /tmp/info_commit_msg)" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
