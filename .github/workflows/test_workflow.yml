@@ -1,17 +1,10 @@
 name: "Test Workflow"
 
 on:
-  pull_request_target:
-    types:
-      - converted_to_draft
-      - ready_for_review
-    branches:
-      - master
-      - 'lse-release/**'
+  push:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
-
 
 jobs:
   test:
@@ -20,63 +13,28 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v2.1.0
 
-      - name: Find submodules PRs
-        id: submodules-prs
-        uses: actions/github-script@v6
-        env:
-          EVENT_ACTION: ${{ github.event.action }}
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref || github.ref_name }}
-        with:
-          github-token: ${{ secrets.GIT_PAT }}
-          script: |
-            const drafted = process.env.EVENT_ACTION == 'converted_to_draft';
-            const branch_name = process.env.BRANCH_NAME;
-            
-            let submodules = [
-              {owner: 'HumanSignal', repo: 'label-studio-query-vectordb'}
-            ]
-            
-            let pr_node_ids = [];
-            for (let submodule of submodules) {
-              const pullRequests = await github.paginate(
-                github.rest.pulls.list,
-                {
-                  owner: submodule.owner,
-                  repo: submodule.repo,
-                  state: 'open',
-                  per_page: 100
-                },
-                (response) => response.data
-              );
-              for (let pullRequest of pullRequests) {
-                if (pullRequest.head.ref === branch_name) {
-                  if (pullRequest.draft !== drafted) {
-                    pr_node_ids.push(pullRequest.node_id);
-                  }
-                }
-              }
-            }
-            
-            core.setOutput('pr_node_ids', pr_node_ids.join('\n'));
-
-      - name: Convert PRs
-        if: steps.submodules-prs.outputs.pr_node_ids
-        id: ready-for-review-pr
+      - name: Commit and push
+        id: commit_and_push
         shell: bash
-        env:
-          GIT_PAT: ${{ secrets.GIT_PAT }}
-          EVENT_ACTION: ${{ github.event.action }}
-          NODE_IDS: ${{ steps.submodules-prs.outputs.pr_node_ids }}
         run: |
-          echo "${GIT_PAT}" | gh auth login --with-token
-          for id in ${NODE_IDS}; do
-            if [ "${EVENT_ACTION}" = 'converted_to_draft' ]; then
-              gh api graphql \
-                -F id="${id}" \
-                -f query='mutation($id: ID!) {convertPullRequestToDraft(input:{pullRequestId: $id}) {pullRequest{id isDraft}}}'
-            else
-              gh api graphql \
-                -F id="${id}" \
-                -f query='mutation($id: ID!) {markPullRequestReadyForReview(input:{pullRequestId: $id}) {pullRequest{id}}}'
-            fi              
-          done
+          cat << EOF > "/tmp/info_commit_msg"
+          multi
+          line
+
+          $(date '+%b %d, %Y')
+          EOF
+          
+          echo "commit_msg_file=$(cat /tmp/info_commit_msg)" >> $GITHUB_OUTPUT
+          echo "COMMIT_MSG_FILE<<EOF" >> $GITHUB_ENV
+          echo "$(cat /tmp/info_commit_msg)" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: GITHUB_OUTPUT
+        shell: bash
+        run: |
+          echo '${{ steps.commit_and_push.outpust.commit_msg_file }}'
+
+      - name: GITHUB_ENV
+        shell: bash
+        run: |
+          echo $COMMIT_MSG_FILE
