@@ -1,0 +1,14 @@
+name: Test action
+description: Test action
+
+inputs:
+  name:
+    description: Artifact name
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Test
+      shell: bash
+      run: echo ${{ inputs.name }}
