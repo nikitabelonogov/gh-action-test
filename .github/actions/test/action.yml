@@ -12,3 +12,7 @@ runs:
     - name: Test
       shell: bash
       run: echo ${{ inputs.name }}
+
+    - name: Test
+      shell: bash
+      run: cat ./file.text
