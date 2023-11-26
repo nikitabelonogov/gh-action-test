@@ -16,11 +16,10 @@ runs:
       shell: bash
       run: echo "path=$(mktemp -d)" >> $GITHUB_OUTPUT
 
-    - name: "Frontend: Checkout module"
-      if: steps.details.outputs.frontend_module_dist
+    - name: Checkout
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.client_payload.repo_name }}
+        repository: nikitabelonogov/gh-action-test
         path: ${{ steps.temp-dir.outputs.path }}
 
     - name: Test Input
