@@ -11,10 +11,22 @@ runs:
   steps:
     - uses: hmarr/debug-action@v2.1.0
 
-    - name: Test
+    - name: Temp dir
+      id: temp-dir
       shell: bash
-      run: echo ${{ inputs.name }}
+      run: echo "path=$(mktemp -d)" >> $GITHUB_OUTPUT
 
-    - name: Test
+    - name: "Frontend: Checkout module"
+      if: steps.details.outputs.frontend_module_dist
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.client_payload.repo_name }}
+        path: ${{ steps.temp-dir.outputs.path }}
+
+    - name: Test Input
       shell: bash
-      run: cat ./file.text
+      run: echo "${{ inputs.name }}"
+
+    - name: Test File
+      shell: bash
+      run: cat "${{ steps.temp-dir.outputs.path }}/file.text"
