@@ -11,21 +11,10 @@ runs:
   steps:
     - uses: hmarr/debug-action@v2.1.0
 
-    - name: Temp dir
-      id: temp-dir
-      shell: bash
-      run: echo "path=$(mktemp -d)" >> $GITHUB_OUTPUT
-
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        repository: nikitabelonogov/gh-action-test
-        path: ${{ steps.temp-dir.outputs.path }}
-
     - name: Test Input
       shell: bash
       run: echo "${{ inputs.name }}"
 
     - name: Test File
       shell: bash
-      run: cat "${{ steps.temp-dir.outputs.path }}/file.text"
+      run: cat "./.github/actions-hub/file.text"
