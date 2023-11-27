@@ -2,19 +2,36 @@ name: Test action
 description: Test action
 
 inputs:
-  name:
-    description: Artifact name
-    required: true
+  actions_hub_dir:
+    description: Actions Hub checkout directory
+    default: "./.github/actions-hub"
+    required: false
+
+outputs:
+  link:
+    description: 'The Jira Ticket link'
+    value: ${{ steps.create-ticket.outputs.message }}
 
 runs:
-  using: composite
+  using: "composite"
   steps:
     - uses: hmarr/debug-action@v2.1.0
 
-    - name: Test Input
+    - name: Create Jira Ticket
+      id: create-ticket
       shell: bash
-      run: echo "${{ inputs.name }}"
+      working-directory: ${{ inputs.actions_hub_dir }}
+#      env:
+#        JIRA_PASSWORD:
+#        JIRA_USER:
+#        TITLE:
+#        DESCRIPTION:
+#        PROJECT: ${{ || '' }}
+      run: |
+        {
+          echo "message<<EOF"
+          cat file.text
+          echo "EOF" 
+        } >> "${GITHUB_OUTPUT}"
 
-    - name: Test File
-      shell: bash
-      run: cat "./.github/actions-hub/file.text"
+
