@@ -13,6 +13,7 @@ WORKFLOW_RUN_LINK = os.getenv("WORKFLOW_RUN_LINK", None)
 
 
 def main():
+    print(JIRA_TICKET_SUMMARY)
     core.set_output("link", JIRA_TICKET_SUMMARY)
 
 
