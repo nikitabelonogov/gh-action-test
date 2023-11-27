@@ -22,7 +22,7 @@ inputs:
 outputs:
   link:
     description: 'The Jira Ticket link'
-    value: ${{ steps.create-ticket.outputs.message }}
+    value: ${{ steps.create-ticket.outputs.link }}
 
 runs:
   using: "composite"
