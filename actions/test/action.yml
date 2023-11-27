@@ -48,4 +48,4 @@ runs:
         JIRA_TICKET_DESCRIPTION: ${{ inputs.description }}
         JIRA_PROJECT: ${{ inputs.project }}
         JIRA_TICKET_TYPE: ${{ inputs.type }}
-      run: python "${ACTIONS_HUB_DIR}/scripts/python/create_jira_issue.py"
+      run: python 'scripts/python/create_jira_issue.py'
