@@ -2,6 +2,18 @@ name: Test action
 description: Test action
 
 inputs:
+  summary:
+    description: Jira Ticket Summary
+    required: true
+  description:
+    description: Jira Ticket Description
+    required: true
+  project:
+    description: Jira Project
+    required: true
+  type:
+    description: Jira Ticket Type
+    required: true
   actions_hub_dir:
     description: Actions Hub checkout directory
     default: "./.github/actions-hub"
@@ -15,23 +27,25 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: hmarr/debug-action@v2.1.0
+    - uses: actions/cache@v3
+      name: Configure pip cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-gh-actions-${{ hashFiles(inputs.actions_hub_dir + '/scripts/python/requirements.txt') }}
+
+    - name: Install tools and dependencies
+      shell: bash
+      working-directory: ${{ inputs.actions_hub_dir }}
+      run: pip install -r scripts/python/requirements.txt
 
     - name: Create Jira Ticket
       id: create-ticket
       shell: bash
       working-directory: ${{ inputs.actions_hub_dir }}
-#      env:
-#        JIRA_PASSWORD:
-#        JIRA_USER:
-#        TITLE:
-#        DESCRIPTION:
-#        PROJECT: ${{ || '' }}
-      run: |
-        {
-          echo "message<<EOF"
-          cat file.text
-          echo "EOF" 
-        } >> "${GITHUB_OUTPUT}"
-
-
+      env:
+        ACTIONS_HUB_DIR: ${{ inputs.actions_hub_dir }}
+        JIRA_TICKET_SUMMARY: ${{ inputs.summary }}
+        JIRA_TICKET_DESCRIPTION: ${{ inputs.description }}
+        JIRA_PROJECT: ${{ inputs.project }}
+        JIRA_TICKET_TYPE: ${{ inputs.type }}
+      run: python "${ACTIONS_HUB_DIR}/scripts/python/create_jira_issue.py"
