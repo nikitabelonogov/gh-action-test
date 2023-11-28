@@ -2,6 +2,15 @@ name: Test action
 description: Test action
 
 inputs:
+  jira_server:
+    description: Jira server
+    required: true
+  jira_username:
+    description: Jira username
+    required: true
+  jira_token:
+    description: Jira token
+    required: true
   summary:
     description: Jira Ticket Summary
     required: true
@@ -21,7 +30,7 @@ inputs:
 
 outputs:
   link:
-    description: 'The Jira Ticket link'
+    description: The Jira Ticket link
     value: ${{ steps.create-ticket.outputs.link }}
 
 runs:
@@ -50,9 +59,12 @@ runs:
       shell: bash
       working-directory: ${{ inputs.actions_hub_dir }}
       env:
-        ACTIONS_HUB_DIR: ${{ inputs.actions_hub_dir }}
+        JIRA_SERVER: ${{ inputs.jira_server }}
+        JIRA_USERNAME: ${{ inputs.jira_username }}
+        JIRA_TOKEN: ${{ inputs.jira_token }}
         JIRA_TICKET_SUMMARY: ${{ inputs.summary }}
         JIRA_TICKET_DESCRIPTION: ${{ inputs.description }}
         JIRA_PROJECT: ${{ inputs.project }}
         JIRA_TICKET_TYPE: ${{ inputs.type }}
+        WORKFLOW_RUN_LINK: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       run: python 'scripts/python/create_jira_issue.py'

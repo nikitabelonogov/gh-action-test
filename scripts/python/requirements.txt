@@ -1,4 +1,3 @@
-jira==3.4.1
-PyGithub==1.57
+PyGithub==2.1.1
+jira==3.5.2
 requests==2.31.0
-
