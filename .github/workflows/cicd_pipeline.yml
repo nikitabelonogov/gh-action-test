@@ -40,7 +40,7 @@ jobs:
       - changed_files
     strategy:
       matrix:
-        image: ${{ needs.changed_files.outputs.changes }}
+        image: ${{ toJSON(needs.changed_files.outputs.changes) }}
     steps:
       - uses: hmarr/debug-action@v2.1.0
 
