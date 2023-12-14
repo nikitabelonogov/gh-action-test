@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: hmarr/debug-action@v2.1.0
-      - run: sleep 20
+      - run: exit 1
 
   notification:
     if: always()
