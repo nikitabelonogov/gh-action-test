@@ -1,0 +1,15 @@
+name: 'Concurrency test'
+
+on:
+  repository_dispatch:
+    types:
+      - test
+
+concurrency:
+  group: ${{ github.event.client_payload.foo }}-${{ github.event.client_payload.bar }}
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v2.1.0
