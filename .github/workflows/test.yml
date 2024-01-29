@@ -30,16 +30,16 @@ jobs:
         working-directory: tmp/scripts
         run: npm install -g jsdoc node-fetch
 
+      - run: |
+          ls -la tmp/scripts
+          ls -la .
+
       - name: "LSF Docs: Build"
         id: lsf-docs-build
 #        if: steps.details.outputs.build_lsf_docs
 #        continue-on-error: true
         working-directory: tmp/scripts
         run: node create-docs.js
-
-      - run: |
-          ls -la tmp/scripts
-          ls -la .
 
       - name: "LSF Docs: Commit and Push"
 #        if: steps.details.outputs.build_lsf_docs && steps.lsf-docs-build.conclusion == 'success'
@@ -51,6 +51,6 @@ jobs:
           mkdir -p "${docs_target_dir}"
           cp -Rf tmp/docs/* "${docs_target_dir}"
           git status
-          git add "${docs_target_dir}"
+#          git add "${docs_target_dir}"
 #          git commit -m 'docs: LSF Update' -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
 #          git push origin HEAD
