@@ -1,12 +1,7 @@
 name: 'Concurrency test'
 
 on:
-  repository_dispatch:
-    types:
-      - test
-
-concurrency:
-  group: ${{ github.event.client_payload.foo }}-${{ github.event.client_payload.bar }}
+  push:
 
 jobs:
   open:
@@ -14,6 +9,44 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v2.1.0
 
-      - run: echo '${{ github.event.client_payload.foo }}-${{ github.event.client_payload.bar }}'
+      - name: "Frontend: Checkout module"
+        if: steps.details.outputs.copy_src_path
+        uses: actions/checkout@v4
+        with:
+          repository: 'HumanSignal/label-studio-frontend'
+          path: tmp
+          fetch-depth: 1
+          ref: 'master'
 
-      - run: sleep 30
+      - name: "LSF Docs: Setup nodejs"
+        uses: actions/setup-node@v4
+        if: steps.details.outputs.build_lsf_docs
+        with:
+          node-version: "18"
+
+      - name: "LSF Docs: Install NPM deps"
+        if: steps.details.outputs.build_lsf_docs
+        continue-on-error: true
+        working-directory: tmp/scripts
+        run: npm install -g jsdoc-to-markdown node-fetch
+
+      - name: "LSF Docs: Build"
+        id: lsf-docs-build
+        if: steps.details.outputs.build_lsf_docs
+        continue-on-error: true
+        working-directory: tmp/scripts
+        run: node create-docs.js
+
+      - name: "LSF Docs: Commit and Push"
+        if: steps.details.outputs.build_lsf_docs && steps.lsf-docs-build.conclusion == 'success'
+        continue-on-error: true
+        run: |
+          set -xeuo pipefail
+          docs_target_dir='${{ env.DOCS_TARGET_DIR }}'
+          find "${docs_target_dir}" ! -name 'index.md' -type f -exec rm -rf {} +
+          mkdir -p "${docs_target_dir}"
+          cp -Rf tmp/docs/* "${docs_target_dir}"
+          git status
+          git add "${docs_target_dir}"
+#          git commit -m 'docs: LSF Update' -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+#          git push origin HEAD
