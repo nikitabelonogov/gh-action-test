@@ -32,6 +32,7 @@ jobs:
 
       - run: |
           ls -la tmp/scripts
+          ls -la tmp
           ls -la .
 
       - name: "LSF Docs: Build"
