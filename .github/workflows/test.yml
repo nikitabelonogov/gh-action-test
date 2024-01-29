@@ -1,10 +1,10 @@
-name: 'Concurrency test'
+name: 'Test'
 
 on:
   push:
 
 jobs:
-  open:
+  main:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
@@ -26,20 +26,20 @@ jobs:
 
       - name: "LSF Docs: Install NPM deps"
 #        if: steps.details.outputs.build_lsf_docs
-        continue-on-error: true
+#        continue-on-error: true
         working-directory: tmp/scripts
         run: npm install -g jsdoc-to-markdown node-fetch
 
       - name: "LSF Docs: Build"
         id: lsf-docs-build
 #        if: steps.details.outputs.build_lsf_docs
-        continue-on-error: true
+#        continue-on-error: true
         working-directory: tmp/scripts
         run: node create-docs.js
 
       - name: "LSF Docs: Commit and Push"
 #        if: steps.details.outputs.build_lsf_docs && steps.lsf-docs-build.conclusion == 'success'
-        continue-on-error: true
+#        continue-on-error: true
         run: |
           set -xeuo pipefail
           docs_target_dir='${{ env.DOCS_TARGET_DIR }}'
