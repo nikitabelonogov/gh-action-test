@@ -28,7 +28,7 @@ jobs:
 #        if: steps.details.outputs.build_lsf_docs
 #        continue-on-error: true
         working-directory: tmp/scripts
-        run: npm install jsdoc-to-markdown
+        run: npm i jsdoc-to-markdown@7.1.1
 
       - run: |
           ls -la tmp/scripts
