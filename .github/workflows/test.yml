@@ -10,7 +10,7 @@ jobs:
       - uses: hmarr/debug-action@v2.1.0
 
       - name: "Frontend: Checkout module"
-        if: steps.details.outputs.copy_src_path
+#        if: steps.details.outputs.copy_src_path
         uses: actions/checkout@v4
         with:
           repository: 'HumanSignal/label-studio-frontend'
@@ -20,25 +20,25 @@ jobs:
 
       - name: "LSF Docs: Setup nodejs"
         uses: actions/setup-node@v4
-        if: steps.details.outputs.build_lsf_docs
+#        if: steps.details.outputs.build_lsf_docs
         with:
           node-version: "18"
 
       - name: "LSF Docs: Install NPM deps"
-        if: steps.details.outputs.build_lsf_docs
+#        if: steps.details.outputs.build_lsf_docs
         continue-on-error: true
         working-directory: tmp/scripts
         run: npm install -g jsdoc-to-markdown node-fetch
 
       - name: "LSF Docs: Build"
         id: lsf-docs-build
-        if: steps.details.outputs.build_lsf_docs
+#        if: steps.details.outputs.build_lsf_docs
         continue-on-error: true
         working-directory: tmp/scripts
         run: node create-docs.js
 
       - name: "LSF Docs: Commit and Push"
-        if: steps.details.outputs.build_lsf_docs && steps.lsf-docs-build.conclusion == 'success'
+#        if: steps.details.outputs.build_lsf_docs && steps.lsf-docs-build.conclusion == 'success'
         continue-on-error: true
         run: |
           set -xeuo pipefail
