@@ -26,8 +26,8 @@ jobs:
 
       - name: "LSF Docs: Install NPM deps"
 #        if: steps.details.outputs.build_lsf_docs
-#        continue-on-error: true
-        working-directory: tmp/scripts
+        continue-on-error: true
+#        working-directory: tmp/scripts
         run: |
           npm i -g jsdoc-to-markdown
           npm fund
