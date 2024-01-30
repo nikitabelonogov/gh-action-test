@@ -30,7 +30,9 @@ jobs:
 #        working-directory: tmp/scripts
         run: |
           npm i -g jsdoc-to-markdown
+          echo '#####'
           npm fund
+          echo '#####'
           node create-docs.js
 
       - run: |
