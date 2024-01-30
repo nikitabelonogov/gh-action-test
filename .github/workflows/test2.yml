@@ -2,11 +2,13 @@ name: "Move Jira issue to QA once pull request is approved"
 
 on:
   pull_request_review:
-    types: [submitted]
+    types:
+      - submitted
+      - edited
 
 jobs:
   approved:
-    if: github.event.review.state == 'approved'
+    if: github.event.review.state == 'APPROVED'
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
