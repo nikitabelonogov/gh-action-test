@@ -1,7 +1,7 @@
 name: "Move Jira issue to QA once pull request is approved"
 
 on:
-  issue_comment:
+  pull_request_target:
 
 jobs:
   approved:
