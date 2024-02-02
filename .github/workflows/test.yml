@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-node@v4
 #        if: steps.details.outputs.build_lsf_docs
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: "LSF Docs: Install NPM deps"
 #        if: steps.details.outputs.build_lsf_docs
