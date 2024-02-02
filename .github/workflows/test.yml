@@ -36,6 +36,7 @@ jobs:
           node create-docs.js
 
       - run: |
+          npm list -g
           ls -la tmp/scripts
           ls -la tmp
           ls -la .
