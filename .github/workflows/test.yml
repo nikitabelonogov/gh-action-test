@@ -23,7 +23,6 @@ jobs:
 #        if: steps.details.outputs.build_lsf_docs
         with:
           node-version: "20"
-          cache: "npm"
 
 
       - name: "LSF Docs: Install NPM deps"
