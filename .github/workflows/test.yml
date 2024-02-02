@@ -35,9 +35,9 @@ jobs:
           echo '#####'
           npm fund
           echo '#####'
-          node create-docs.js
 
       - run: |
+          npm -v
           npm list -g
           ls -la tmp/scripts
           ls -la tmp
