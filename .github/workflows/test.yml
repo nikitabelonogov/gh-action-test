@@ -7,7 +7,7 @@ on:
 
 jobs:
   qa-ready:
-#    if: github.event.label.name == 'QA'
+    if: github.event.label.name == 'QA'
     runs-on: ubuntu-latest
     steps:
       - run: echo '${{ github.event.label.name }}'
