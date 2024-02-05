@@ -1,9 +1,9 @@
 name: "Jira: Move issue to QA once pull request is labeled"
 
 on:
-  label:
+  pull_request_target:
     types:
-      - created
+      - labeled
 
 jobs:
   qa-ready:
