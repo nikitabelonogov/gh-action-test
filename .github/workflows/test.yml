@@ -7,6 +7,7 @@ on:
 
 jobs:
   qa-ready:
+    if: github.event.label.name == 'QA'
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
