@@ -8,4 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v2.1.0
-      - run: egrep -q '(-|post)' <<< "1.2.3.post1"
+      - run: |
+        set -eux
+        egrep -q '(-|post)' <<< "1.2.3.post1"
