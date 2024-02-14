@@ -1,14 +1,12 @@
-name: "Jira: Move issue to QA once pull request is labeled"
+name: "Jira: Move issue to QA once pull request is labeled or approved"
 
 on:
-  pull_request_target:
-    types:
-      - labeled
+  push:
 
 jobs:
   qa-ready:
-    if: github.event.label.name == 'QA'
+    if: github.event.label.name == 'QA' || github.event.review.state == 'APPROVED'
     runs-on: ubuntu-latest
     steps:
-      - run: echo '${{ github.event.label.name }}'
       - uses: hmarr/debug-action@v2.1.0
+      - run: egrep -q '(-|post)' <<< "1.2.3.post1"
