@@ -9,5 +9,5 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v2.1.0
       - run: |
-        set -eux
-        egrep -q '(-|post)' <<< "1.2.3.post1"
+          set -eux
+          egrep -q '(-|post)' <<< "1.2.3.post1"
