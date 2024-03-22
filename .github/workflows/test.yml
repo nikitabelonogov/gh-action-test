@@ -25,5 +25,5 @@ jobs:
           ref: "develop"
           sparse-checkout: |
             /*
-            !label_studio/frontend
-            !web/dis
+            !label_studio/frontend/*
+            !web/dis/*
