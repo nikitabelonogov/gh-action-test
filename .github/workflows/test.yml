@@ -4,10 +4,25 @@ on:
   push:
 
 jobs:
-  qa-ready:
+  checkout:
+    name: 'Checkout w\o sparse'
     runs-on: ubuntu-latest
     steps:
-      - uses: hmarr/debug-action@v2.1.0
-      - run: |
-          set -eux
-          egrep -q '(-|post)' <<< "1.2.3.post1"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "HumanSignal/label-studio"
+          ref: "develop"
+
+  checkout-sparse:
+    name: 'Checkout w\ sparse'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "HumanSignal/label-studio"
+          ref: "develop"
+          sparse-checkout: |
+            !label_studio/frontend
+            !web/dis
