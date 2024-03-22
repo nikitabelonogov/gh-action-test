@@ -27,7 +27,6 @@ jobs:
           ref: "develop"
           sparse-checkout-cone-mode: true
           sparse-checkout: |
-            !label_studio/frontend/*
-            !web/dis/*
-
+            !/label_studio/frontend/*/
+            !/web/dis/*/
       - run: ls -lah
