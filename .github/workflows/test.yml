@@ -27,5 +27,6 @@ jobs:
           ref: "develop"
           sparse-checkout-cone-mode: false
           sparse-checkout: |
-            web
+            /*
+            !/web/*
       - run: ls -lah
