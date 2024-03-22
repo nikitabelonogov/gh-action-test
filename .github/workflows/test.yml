@@ -24,5 +24,6 @@ jobs:
           repository: "HumanSignal/label-studio"
           ref: "develop"
           sparse-checkout: |
+            /*
             !label_studio/frontend
             !web/dis
