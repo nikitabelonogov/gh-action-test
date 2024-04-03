@@ -19,5 +19,5 @@ jobs:
     steps:
       - name: job.status
         run: echo "${{job.status}}"
-      - name: workflow.status
-        run: echo "${{workflow.status}}"
+      - name: ${{ failure() }}
+        run: echo "${{ failure() }}"
