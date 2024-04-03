@@ -1,32 +1,23 @@
-name: "Jira: Move issue to QA once pull request is labeled or approved"
+name: "Test"
 
 on:
   push:
 
 jobs:
-  checkout:
-    name: 'Checkout w\o sparse'
+  test1:
+    name: 'test2'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: "HumanSignal/label-studio"
-          ref: "develop"
+      - run: exit 1
 
-      - run: ls -lah
-
-  checkout-sparse:
-    name: 'Checkout w\ sparse'
+  test2:
+    name: 'test'
     runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - test1
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: "HumanSignal/label-studio"
-          ref: "develop"
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /*
-            !/web/*
-      - run: ls -lah
+      - name: job.status
+        run: echo "${{job.status}}"
+      - name: workflow.status
+        run: echo "${{workflow.status}}"
