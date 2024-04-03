@@ -19,3 +19,7 @@ jobs:
     steps:
       - name: job.status
         run: echo "${{job.status}}"
+      - name: github.run_attempt
+        env:
+          DEBUG: github.run_attempt > 1
+        run: echo "${DEBUG}"
