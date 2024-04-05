@@ -49,10 +49,12 @@ jobs:
           ref: "${{ steps.get-branch.outputs.branch_name }}"
           path: "${{ env.DOCS_REPO_PATH }}"
 
+      - run: ls -lah
+
       - name: Generate Docs
         env:
           ML_REPO_PATH: '${{ env.ML_REPO_PATH }}'
-        run: python "./${DOCS_REPO_PATH}/scripts/update_ml_tutorials.py"
+        run: python "${DOCS_REPO_PATH}/scripts/update_ml_tutorials.py"
 
       - run: git status
 
