@@ -60,7 +60,7 @@ jobs:
         env:
           ML_REPO_PATH: '${{ env.ML_REPO_PATH }}'
         working-directory: "${{ env.DOCS_REPO_PATH }}"
-        run: python "${DOCS_REPO_PATH}/scripts/update_ml_tutorials.py"
+        run: python '/scripts/update_ml_tutorials.py'
 
       - run: git status
         working-directory: "${{ env.DOCS_REPO_PATH }}"
