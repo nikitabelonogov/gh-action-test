@@ -3,15 +3,15 @@ name: "Docs"
 on:
   push:
 
+concurrency:
+  group: "Docs"
+  cancel-in-progress: true
+
 env:
   DOCS_REPO_NAME: "label-studio"
   DOCS_REPO_PATH: "label-studio"
   ML_REPO_PATH: "label-studio-ml-backend"
   COMMIT_MESSAGE: "docs: Update label-studio-ml-backend docs"
-
-concurrency:
-  group: "Docs"
-  cancel-in-progress: true
 
 jobs:
   docs:
