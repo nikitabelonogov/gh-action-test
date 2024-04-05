@@ -8,6 +8,10 @@ env:
   DOCS_REPO_PATH: "label-studio"
   ML_REPO_PATH: "label-studio-ml-backend"
 
+concurrency:
+  group: "Docs"
+  cancel-in-progress: true
+
 jobs:
   docs:
     runs-on: ubuntu-latest
