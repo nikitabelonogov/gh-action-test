@@ -5,6 +5,7 @@ on:
 
 env:
   DOCS_REPO_NAME: "label-studio"
+  DOCS_REPO_PATH: "label-studio"
   ML_REPO_PATH: "label-studio-ml-backend"
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
       - name: Git Configure
         uses: ./.github/actions-hub/actions/git-configure
         with:
-          username: ${{ github.event.client_payload.github.actor || 'robot-ci-heartex' }}
+          username: "${{ github.event.sender.login }}"
 
       - name: Find or Create Branch
         uses: ./.github/actions-hub/actions/github-find-or-create-branch
@@ -46,14 +47,16 @@ jobs:
           token: "${{ secrets.GIT_PAT }}"
           repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
           ref: "${{ steps.get-branch.outputs.branch_name }}"
-          path: "lso"
+          path: "${{ env.DOCS_REPO_PATH }}"
 
       - name: Generate Docs
         env:
           ML_REPO_PATH: '${{ env.ML_REPO_PATH }}'
-        run: python ./lso/scripts/update_ml_tutorials.py
+        run: python "./${DOCS_REPO_PATH}/scripts/update_ml_tutorials.py"
 
-      - name: Git Push
-        uses: ./.github/actions-hub/actions/git-push
-        with:
-          working_directory: "lso"
+      - run: git status
+
+#      - name: Git Push
+#        uses: ./.github/actions-hub/actions/git-push
+#        with:
+#          working_directory: "${{ env.DOCS_REPO_PATH }}"
