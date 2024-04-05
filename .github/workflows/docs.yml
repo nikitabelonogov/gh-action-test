@@ -7,6 +7,7 @@ env:
   DOCS_REPO_NAME: "label-studio"
   DOCS_REPO_PATH: "label-studio"
   ML_REPO_PATH: "label-studio-ml-backend"
+  COMMIT_MESSAGE: "docs: Update label-studio-ml-backend docs"
 
 concurrency:
   group: "Docs"
@@ -53,22 +54,20 @@ jobs:
           ref: "${{ steps.get-branch.outputs.branch_name }}"
           path: "${{ env.DOCS_REPO_PATH }}"
 
-      - run: ls -lah
-        working-directory: "${{ env.DOCS_REPO_PATH }}"
-
-      - run: ls -lah scripts
-        working-directory: "${{ env.DOCS_REPO_PATH }}"
-
       - name: Generate Docs
         env:
           ML_REPO_PATH: '${{ env.ML_REPO_PATH }}'
         working-directory: "${{ env.DOCS_REPO_PATH }}"
         run: python 'scripts/update_ml_tutorials.py'
 
-      - run: git status
+      - name: Git Commit
         working-directory: "${{ env.DOCS_REPO_PATH }}"
+        run: |
+          git add 'label-studio/docs/source/tutorials' 'docs/source/guide/ml_tutorials.html' || true
+          git status -s
+          git commit -m '${{ env.COMMIT_MESSAGE }}' -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}' || true
 
-#      - name: Git Push
-#        uses: ./.github/actions-hub/actions/git-push
-#        with:
-#          working_directory: "${{ env.DOCS_REPO_PATH }}"
+      - name: Git Push
+        uses: ./.github/actions-hub/actions/git-push
+        with:
+          working_directory: "${{ env.DOCS_REPO_PATH }}"
