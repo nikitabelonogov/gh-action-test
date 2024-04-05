@@ -1,0 +1,59 @@
+name: "Docs"
+
+on:
+  push:
+
+env:
+  DOCS_REPO_NAME: "label-studio"
+  ML_REPO_PATH: "label-studio-ml-backend"
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: "${{ secrets.GIT_PAT }}"
+          repository: "HumanSignal/actions-hub"
+          path: "./.github/actions-hub"
+
+      - name: Git Configure
+        uses: ./.github/actions-hub/actions/git-configure
+        with:
+          username: ${{ github.event.client_payload.github.actor || 'robot-ci-heartex' }}
+
+      - name: Find or Create Branch
+        uses: ./.github/actions-hub/actions/github-find-or-create-branch
+        id: get-branch
+        with:
+          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
+          base_branch_name: "develop"
+          branch_name: "docs-ml-backend"
+          github-token: "${{ secrets.GIT_PAT }}"
+
+      - name: Checkout ML
+        uses: actions/checkout@v4
+        with:
+          token: "${{ secrets.GIT_PAT }}"
+          path: "${{ env.ML_REPO_PATH }}"
+
+      - name: Checkout LSO
+        uses: actions/checkout@v4
+        with:
+          token: "${{ secrets.GIT_PAT }}"
+          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
+          ref: "${{ steps.get-branch.outputs.branch_name }}"
+          path: "lso"
+
+      - name: Generate Docs
+        env:
+          ML_REPO_PATH: '${{ env.ML_REPO_PATH }}'
+        run: python ./lso/scripts/update_ml_tutorials.py
+
+      - name: Git Push
+        uses: ./.github/actions-hub/actions/git-push
+        with:
+          working_directory: "lso"
