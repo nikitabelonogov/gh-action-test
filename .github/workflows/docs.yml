@@ -84,4 +84,4 @@ jobs:
           github-token: "${{ secrets.GIT_PAT }}"
 
       - name: Set notice
-        run: echo "::notice::Pull Request ${{ fromJSON(steps.get-pull-request.outputs.pull).html_url }}"
+        run: echo "::notice::Pull Request ${{ steps.get-pull-request.outputs.html_url }}"
