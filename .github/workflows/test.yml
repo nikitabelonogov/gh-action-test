@@ -1,0 +1,15 @@
+name: "TEST"
+
+on:
+  push:
+
+concurrency:
+  group: "TEST"
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+
