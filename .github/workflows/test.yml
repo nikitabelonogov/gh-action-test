@@ -12,7 +12,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     outputs:
-      matrix: "${{ steps.find-and-close-prs.outputs.matrix }}"
+      pr-numbers: "${{ steps.find-and-close-prs.outputs.pr-numbers }}"
+      pr-head-branches: "${{ steps.find-and-close-prs.outputs.pr-head-branches }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
@@ -22,8 +23,9 @@ jobs:
         with:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
-            const matrix = [];
-            core.setOutput("matrix", matrix);
+            const matrix = [1];
+            core.setOutput("pr-numbers", [1]);
+            core.setOutput("pr-head-branches", ['w']);
 
       - run: echo "${{ steps.find-and-close-prs.outputs.matrix }}"
 
@@ -33,8 +35,10 @@ jobs:
       - test
     strategy:
       matrix:
-        pr_number: "${{ fromJson(needs.test.outputs.matrix) }}"
+        pr-number: "${{ fromJson(needs.test.outputs.pr-numbers) }}"
+        pr-head-branch: "${{ fromJson(needs.test.outputs.pr-head-branches) }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - run: echo "${{ matrix.pr_number }}"
+      - run: echo "${{ matrix.pr-number }}"
+      - run: echo "${{ matrix.pr-head-branch }}"
