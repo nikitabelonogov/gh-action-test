@@ -23,9 +23,9 @@ jobs:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
             const developVersions = {
-                'label-studio': matchLS.groups.sha,
-                'label-studio-evalme': matchEVALME.groups.sha,
-                'label-studio-sdk': matchLSSDK.groups.sha,
+                'label-studio': '123',
+                'label-studio-evalme': '456',
+                'label-studio-sdk': '789',
               };
             core.setOutput("develop-versions", developVersions);
 
