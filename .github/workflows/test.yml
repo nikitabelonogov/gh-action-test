@@ -23,7 +23,9 @@ jobs:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
             const matrix = [1, 2, 4];
-            core.setOutput("PRnumbers", matrix);
+            core.setOutput("matrix", matrix);
+
+      - run: echo "${{ steps.find-and-close-prs.outputs.matrix }}"
 
   test2:
     runs-on: ubuntu-latest
