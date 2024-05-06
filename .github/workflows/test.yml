@@ -30,7 +30,7 @@ jobs:
     needs:
       - test
     strategy:
-      matrix: "${{ needs.test.outputs.matrix }}"
+      matrix: "${{ fromJson(needs.test.outputs.matrix) }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
