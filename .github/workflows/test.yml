@@ -36,4 +36,4 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - run: echo "${{ fromJson(needs.test.outputs.develop-versions) }}"
+      - run: echo "${{ fromJson(needs.test.outputs.develop-versions).'label-studio' }}"
