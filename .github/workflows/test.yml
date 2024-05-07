@@ -65,7 +65,7 @@ jobs:
             const followMergePullRequests = pullRequests.filter(e =>
               e.head.ref.startsWith(followMergePRBranchPrefix) &&
               e.base.ref === followMergePRBaseBranch &&
-              e.user.login === followMergePRAuthor &&
+              // e.user.login === followMergePRAuthor &&
               e.merge_commit_sha
             );
             
