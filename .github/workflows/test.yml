@@ -343,7 +343,7 @@ jobs:
             console.log(compare);
             core.endGroup();
             
-            if (compare.files === []) {
+            if (compare.files.length === 0) {
               console.log(`Closing Stale Follow Merge PR ${pr.html_url}`)
               const commit = await createEmptyCommit(pr.base.ref, pr.title, pr.number)
               await github.rest.issues.createComment({
