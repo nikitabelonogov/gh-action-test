@@ -302,7 +302,7 @@ jobs:
               const {data: createdCommit} = await github.rest.git.createCommit({
                 owner,
                 repo,
-                message: `${message} (#${number})`,
+                message: `${message} (stale) (#${number})`,
                 tree: latestCommit.commit.tree.sha,
                 parents: [latestCommit.sha],
                 author: {
