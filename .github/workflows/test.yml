@@ -30,10 +30,10 @@ jobs:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
             core.startGroup(`Output Matrix`);
-            const matrix = [
+            const matrix = {'include': [
               {'pr-number': 1 , 'pr-head-branch': 'foo'},
               {'pr-number': 2 , 'pr-head-branch': 'bar'},
-            ];
+            ]};
             console.log(matrix);
             core.setOutput("matrix", matrix);
             core.endGroup();
