@@ -30,10 +30,7 @@ jobs:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
             core.startGroup(`Output Matrix`);
-            const martixInclude = [
-              {'pr-number': 1 , 'pr-head-branch': 'foo'},
-              {'pr-number': 2 , 'pr-head-branch': 'bar'},
-            ];
+            const martixInclude = [];
             console.log(martixInclude);
             core.setOutput("martix-include", martixInclude);
             core.endGroup();
@@ -49,4 +46,4 @@ jobs:
         include: ${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.martix-include) }}
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ matrix.pr-head-branch }} ${{ matrix.pr-head-branch }}"
+      - run: echo "${{ matrix.pr-number }} ${{ matrix.pr-head-branch }}"
