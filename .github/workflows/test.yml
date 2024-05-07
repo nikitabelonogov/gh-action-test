@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
+env:
+  AUTHOR_NAME: 'robot-ci-heartex'
+  AUTHOR_EMAIL: 'robot-ci-heartex@users.noreply.github.com'
+
 jobs:
   findStaleFollowMergePullRequests:
     name: Close Stale PRs
@@ -43,8 +47,8 @@ jobs:
             const { repo, owner } = context.repo;
             
             const user_details = ${{ steps.team_details.outputs.details || '[]' }};
-                        
-            const followMergePRAuthor = 'robot-ci-heartex';
+            
+            const followMergePRAuthor = process.env.AUTHOR_NAME;
             const followMergePRBranchPrefix = 'fb-';
             const followMergePRBaseBranch = 'develop';
             const followMergePRStaleLabel = 'stale';
@@ -278,8 +282,8 @@ jobs:
             const { repo, owner } = context.repo;
             
             const pull_number = process.env.PR_NUMBER;
-            const authorName = 'robot-ci-heartex';
-            const authorEmail = 'robot-ci-heartex@users.noreply.github.com';
+            const authorName = process.env.AUTHOR_NAME;
+            const authorEmail = process.env.AUTHOR_EMAIL;
             
             async function createEmptyCommit(branch, message, number) {
               const {data: branchData} = await github.rest.repos.getBranch({
