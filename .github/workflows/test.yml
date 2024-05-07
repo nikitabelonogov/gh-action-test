@@ -171,8 +171,8 @@ jobs:
             }
             core.endGroup();
             
-            core.setOutput("pr-numbers", [behindFollowMergePullRequests.map(e => e.number)]);
-            core.setOutput("pr-head-branches", [behindFollowMergePullRequests.map(e => e.head.ref)]);
+            core.setOutput("pr-numbers", behindFollowMergePullRequests.map(e => e.number));
+            core.setOutput("pr-head-branches", behindFollowMergePullRequests.map(e => e.head.ref));
 
   updateStaleFollowMergePullRequest:
     runs-on: ubuntu-latest
@@ -260,7 +260,6 @@ jobs:
         uses: ./.github/actions-hub/actions/git-push
 
       - name: Create an empty commit
-        id: find-and-close-prs
         uses: actions/github-script@v7
         env:
           PR_NUMBER: ${{ matrix.pr-number }}
