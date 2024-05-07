@@ -163,7 +163,7 @@ premailer = "^3.10.0"
 
 # Humansignal repo dependencies
 
-label-studio = {url = "https://github.com/HumanSignal/label-studio/archive/0ee49f536ab46545f90a02ff2fa8e7c7dd12f14f.zip"}
+label-studio = {url = "https://github.com/HumanSignal/label-studio/archive/ecea57a926371151f0e0dfde58fa9650097c88b1.zip"}
 label-studio-evalme = {url = "https://github.com/HumanSignal/label-studio-evalme/archive/5bb2b143d67d84024bbb39a19edbfd67d6ecf8e7.zip"}
 label-studio-sdk = {url = "https://github.com/HumanSignal/label-studio-sdk/archive/ecd529ccc993ef23e8bb810ed8cafbd7c2892466.zip"}
 
