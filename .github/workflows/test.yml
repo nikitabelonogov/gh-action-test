@@ -310,6 +310,11 @@ jobs:
               pull_number,
             })
             
+            console.log(pr.merge_commit_sha)
+            core.startGroup(`PR`);
+            console.log(pr);
+            core.endGroup();
+            
             const {data: compare} = await github.rest.repos.compareCommits({
               owner,
               repo,
