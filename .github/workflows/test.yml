@@ -171,11 +171,20 @@ jobs:
             }
             core.endGroup();
             
-            core.setOutput("pr-numbers", behindFollowMergePullRequests.map(e => e.number));
-            core.setOutput("pr-head-branches", behindFollowMergePullRequests.map(e => e.head.ref));
+            const prNumbers = behindFollowMergePullRequests.map(e => e.number);
+            const prHeadBranches = behindFollowMergePullRequests.map(e => e.head.ref);
+            
+            core.startGroup(`Output Matrix`);
+            conslole.log(prNumbers);
+            conslole.log(prHeadBranches);
+            core.endGroup();
+            
+            core.setOutput("pr-numbers", prNumbers);
+            core.setOutput("pr-head-branches", prHeadBranches);
 
   updateStaleFollowMergePullRequest:
     runs-on: ubuntu-latest
+    if: needs.findStaleFollowMergePullRequests.outputs.pr-numbers != '[]' || needs.findStaleFollowMergePullRequests.outputs.pr-head-branches != '[]'
     needs:
       - findStaleFollowMergePullRequests
     strategy:
