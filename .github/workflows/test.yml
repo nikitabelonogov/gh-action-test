@@ -19,7 +19,7 @@ jobs:
     name: Close Stale PRs
     runs-on: ubuntu-latest
     outputs:
-      matrix: "${{ steps.find-stale-fm-prs.outputs.matrix }}"
+      martix-include: "${{ steps.find-stale-fm-prs.outputs.martix-include }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
@@ -30,21 +30,23 @@ jobs:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
             core.startGroup(`Output Matrix`);
-            const matrix = {'include': [
+            const martixInclude = {'include': [
               {'pr-number': 1 , 'pr-head-branch': 'foo'},
               {'pr-number': 2 , 'pr-head-branch': 'bar'},
             ]};
-            console.log(matrix);
-            core.setOutput("matrix", matrix);
+            console.log(martixInclude);
+            core.setOutput("martix-include", martixInclude);
             core.endGroup();
             
 
   updateStaleFollowMergePullRequest:
     runs-on: ubuntu-latest
-    if: needs.findStaleFollowMergePullRequests.outputs.martix != '{}'
+    if: needs.findStaleFollowMergePullRequests.outputs.martix-include != '[]'
     needs:
       - findStaleFollowMergePullRequests
     strategy:
-      matrix: ${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.matrix) }}
+      matrix:
+        include: ${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.martix-include) }}
     steps:
       - uses: hmarr/debug-action@v3.0.0
+      - run: echo "${{ matrix.pr-head-branch }} ${{ matrix.pr-head-branch }}"
