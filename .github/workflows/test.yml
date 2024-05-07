@@ -175,8 +175,8 @@ jobs:
             const prHeadBranches = behindFollowMergePullRequests.map(e => e.head.ref);
             
             core.startGroup(`Output Matrix`);
-            conslole.log(prNumbers);
-            conslole.log(prHeadBranches);
+            console.log(prNumbers);
+            console.log(prHeadBranches);
             core.endGroup();
             
             core.setOutput("pr-numbers", prNumbers);
