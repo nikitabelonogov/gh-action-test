@@ -356,4 +356,10 @@ jobs:
                   '> [Workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
                 ].join('\n'),
               });
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                state: 'closed',
+              });
             }
