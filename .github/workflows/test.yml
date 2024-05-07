@@ -331,7 +331,7 @@ jobs:
               owner,
               repo,
               base: pr.base.ref,
-              head: pr.merge_commit_sha,
+              head: pr.head.sha,
             });
             
             
@@ -341,7 +341,7 @@ jobs:
             console.log(compare);
             core.endGroup();
             
-            if (compare.status === 'identical') {
+            if (compare.files === []) {
               console.log(`Closing Stale Follow Merge PR ${pr.html_url}`)
               const commit = await createEmptyCommit(pr.base.ref, pr.title, pr.number)
               await github.rest.issues.createComment({
