@@ -216,8 +216,8 @@ jobs:
       - name: Git Configure
         uses: ./.github/actions-hub/actions/git-configure
         with:
-          username: ${{ github.event.client_payload.author_username }}
-          email: ${{ github.event.client_payload.author_email }}
+          username: ${{ env.AUTHOR_NAME }}
+          email: ${{ env.AUTHOR_EMAIL }}
 
       - name: Set up Poetry
         uses: Gr1N/setup-poetry@v9
