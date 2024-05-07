@@ -180,7 +180,7 @@ jobs:
       - findStaleFollowMergePullRequests
     strategy:
       matrix:
-        pr-number: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.develop-versions) }}"
+        pr-number: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.pr-numbers) }}"
         pr-head-branch: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.pr-head-branches) }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
