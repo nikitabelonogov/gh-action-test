@@ -19,8 +19,7 @@ jobs:
     name: Close Stale PRs
     runs-on: ubuntu-latest
     outputs:
-      pr-numbers: "${{ steps.find-stale-fm-prs.outputs.pr-numbers }}"
-      pr-head-branches: "${{ steps.find-stale-fm-prs.outputs.pr-head-branches }}"
+      matrix: "${{ steps.find-stale-fm-prs.outputs.matrix }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
@@ -30,25 +29,22 @@ jobs:
         with:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
-            
             core.startGroup(`Output Matrix`);
-            const prNumbers = [1, 2];
-            const prHeadBranches = ['b1', 'b2'];
-            console.log(prNumbers);
-            console.log(prHeadBranches);
-            core.setOutput("pr-numbers", prNumbers);
-            core.setOutput("pr-head-branches", prHeadBranches);
+            const matrix = [
+              {'pr-number': 1 , 'pr-head-branch': 'foo'},
+              {'pr-number': 2 , 'pr-head-branch': 'bar'},
+            ];
+            console.log(matrix);
+            core.setOutput("matrix", matrix);
             core.endGroup();
             
 
   updateStaleFollowMergePullRequest:
     runs-on: ubuntu-latest
-    if: needs.findStaleFollowMergePullRequests.outputs.pr-numbers != '[]' || needs.findStaleFollowMergePullRequests.outputs.pr-head-branches != '[]'
+    if: needs.findStaleFollowMergePullRequests.outputs.martix != '{}'
     needs:
       - findStaleFollowMergePullRequests
     strategy:
-      matrix:
-        pr-number: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.pr-numbers) }}"
-        pr-head-branch: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.pr-head-branches) }}"
+      matrix: ${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.matrix) }}
     steps:
       - uses: hmarr/debug-action@v3.0.0
