@@ -1,20 +1,38 @@
-name: "TEST"
+name: 'Follow Merge: Close Stale PRs'
 
 on:
   workflow_dispatch:
   push:
+    branches:
+      - develop
+    paths:
+      - pyproject.toml
 
 concurrency:
-  group: "TEST"
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  findStaleFollowMergePullRequests:
+    name: Close Stale PRs
     runs-on: ubuntu-latest
     outputs:
-      develop-versions: "${{ steps.find-and-close-prs.outputs.develop-versions }}"
+      develop-label-studio-sha: "${{ steps.find-and-close-prs.outputs.develop-label-studio-sha }}"
+      develop-label-studio-evalme-sha: "${{ steps.find-and-close-prs.outputs.develop-label-studio-evalme-sha }}"
+      develop-label-studio-sdk-sha: "${{ steps.find-and-close-prs.outputs.develop-label-studio-sdk-sha }}"
+      pr-numbers: "${{ steps.find-and-close-prs.outputs.pr-numbers }}"
+      pr-head-branches: "${{ steps.find-and-close-prs.outputs.pr-head-branches }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
+
+      - name: Team details
+        id: team_details
+        uses: ./.github/actions/team-details
+        with:
+          jira-server: "${{ vars.JIRA_SERVER }}"
+          jira-username: "${{ secrets.JIRA_USERNAME }}"
+          jira-token: "${{ secrets.JIRA_TOKEN }}"
+        continue-on-error: true
 
       - name: Find and close Stale PRs
         id: find-and-close-prs
@@ -22,18 +40,301 @@ jobs:
         with:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
-            const developVersions = {
-                'label-studio': '123',
-                'label-studio-evalme': '456',
-                'label-studio-sdk': '789',
-              };
-            core.setOutput("develop-versions", developVersions);
+            const { repo, owner } = context.repo;
+            
+            const user_details = ${{ steps.team_details.outputs.details || '[]' }};
+                        
+            const followMergePRAuthor = 'robot-ci-heartex';
+            const followMergePRBranchPrefix = 'fb-';
+            const followMergePRBaseBranch = 'develop';
+            const followMergePRStaleLabel = 'stale';
+            const pyProjectPath = 'pyproject.toml';
+            
+            const pullRequests = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100
+              },
+            );
+            
+            console.log(`Found ${pullRequests.length} open Pull Requests`);
+            
+            const followMergePullRequests = pullRequests.filter(e =>
+              e.head.ref.startsWith(followMergePRBranchPrefix) &&
+              e.base.ref === followMergePRBaseBranch &&
+              e.user.login === followMergePRAuthor &&
+              e.merge_commit_sha
+            );
+            
+            console.log(`Found ${followMergePullRequests.length} open Follow Merge Pull Requests`);
+            
+            async function getLSEDependentModuleVersions(ref) {
+              const {data: commit} = await github.rest.repos.getCommit({
+                owner,
+                repo,
+                ref,
+              });
+              const pyprojectBlob = await github.rest.repos.getContent({
+                owner: owner,
+                repo: repo,
+                ref: commit.sha,
+                path: pyProjectPath,
+              });
+              const pyproject = Buffer.from(pyprojectBlob.data.content, pyprojectBlob.data.encoding).toString("utf8");
+              const matchLS = pyproject.match(/label-studio(\/archive|.git).*(?<sha>[a-f0-9]{40})/);
+              const matchEVALME = pyproject.match(/label-studio-evalme(\/archive|.git).*(?<sha>[a-f0-9]{40})/);
+              const matchLSSDK = pyproject.match(/label-studio-sdk(\/archive|.git).*(?<sha>[a-f0-9]{40})/);
+              return {
+                'label-studio': matchLS.groups.sha,
+                'label-studio-evalme': matchEVALME.groups.sha,
+                'label-studio-sdk': matchLSSDK.groups.sha,
+              }
+            }
+            
+            const developVersions = await getLSEDependentModuleVersions('develop');
+            core.setOutput("develop-label-studio-sha", developVersions['label-studio']);
+            core.setOutput("develop-label-studio-evalme-sha", developVersions['label-studio-evalme']);
+            core.setOutput("develop-label-studio-sdk-sha", developVersions['label-studio-sdk']);
+            
+            core.startGroup(`Open Follow Merge Pull Requests`);
+            let behindFollowMergePullRequests = [];
+            let failedFollowMergePullRequests = [];
+            for (const followMergePullRequest of followMergePullRequests) {
+            
+              let behind = 0;
+              let ahead = 0;
+            
+              console.log();
+              console.log(`${followMergePullRequest.html_url} ${followMergePullRequest.title}`);
+            
+              let followMergePullRequestVersions = null;
+              try {
+                followMergePullRequestVersions = await getLSEDependentModuleVersions(followMergePullRequest.merge_commit_sha);
+              } catch (e) {
+                console.log(`Failed to get versions: ${e}`);
+              }
+              if (followMergePullRequestVersions === null) {
+                failedFollowMergePullRequests.push(followMergePullRequest);
+                continue;
+              }
+            
+              for (const depRepo in followMergePullRequestVersions) {
+                const {data: compare} = await github.rest.repos.compareCommits({
+                  owner,
+                  repo: depRepo,
+                  base: developVersions[depRepo],
+                  head: followMergePullRequestVersions[depRepo],
+                });
+                behind += compare.behind_by;
+                ahead += compare.ahead_by;
+                console.log(`${depRepo} is ${compare.status} +${compare.ahead_by} -${compare.behind_by} ${compare.html_url}`);
+              }
+              const {data: compare} = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: followMergePullRequest.base.sha,
+                head: followMergePullRequest.head.sha,
+              });
+              const pyprojectChanged = compare.files.some(e => e.filename === pyProjectPath);
+              let status = 'diverged';
+              if (ahead === 0 && behind === 0)
+                status = 'identical';
+              else if (ahead > 0 && behind === 0)
+                status = 'ahead';
+              else if (ahead === 0 && behind > 0) {
+                status = 'behind';
+              }
+              console.log(`${status} +${ahead} -${behind} ${pyProjectPath} is ${pyprojectChanged? '' : 'not '}changed`)
+              if (status === 'behind' && pyprojectChanged === true)
+                behindFollowMergePullRequests.push(followMergePullRequest);
+            }
+            core.endGroup();
+            
+            core.startGroup(`Found ${behindFollowMergePullRequests.length} Stale open Follow Merge Pull Requests`);
+            for (const followMergePullRequest of behindFollowMergePullRequests) {
+              console.log(`${followMergePullRequest.html_url} ${followMergePullRequest.title}`);
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: followMergePullRequest.number,
+                labels: [followMergePRStaleLabel],
+              })
+            }
+            core.endGroup();
+            
+            core.startGroup(`Found ${failedFollowMergePullRequests.length} Obsolete open Follow Merge Pull Requests`);
+            for (const followMergePullRequest of failedFollowMergePullRequests) {
+              console.log(`${followMergePullRequest.html_url} ${followMergePullRequest.title}`);
+            }
+            core.endGroup();
+            
+            core.setOutput("pr-numbers", [behindFollowMergePullRequests.map(e => e.number)]);
+            core.setOutput("pr-head-branches", [behindFollowMergePullRequests.map(e => e.head.ref)]);
 
-  test2:
+  updateStaleFollowMergePullRequest:
     runs-on: ubuntu-latest
     needs:
-      - test
+      - findStaleFollowMergePullRequests
+    strategy:
+      matrix:
+        pr-number: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.develop-versions) }}"
+        pr-head-branch: "${{ fromJson(needs.findStaleFollowMergePullRequests.outputs.pr-head-branches) }}"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - run: echo "${{ fromJson(needs.test.outputs.develop-versions).'label-studio' }}"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ secrets.GIT_PAT }}
+          fetch-depth: 0
+          ref: ${{ matrix.pr-head-branch }}
+
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
+
+      - name: Git Configure
+        uses: ./.github/actions-hub/actions/git-configure
+        with:
+          username: ${{ github.event.client_payload.author_username }}
+          email: ${{ github.event.client_payload.author_email }}
+
+      - name: Set up Poetry
+        uses: Gr1N/setup-poetry@v9
+
+      - name: Update Follow Merge dependencies
+        shell: bash
+        env:
+          LSO_SHA: "${{ needs.findStaleFollowMergePullRequests.outputs.develop-label-studio-sha }}"
+          LS_EVALME_SHA: "${{ needs.findStaleFollowMergePullRequests.outputs.develop-label-studio-evalme-sha }}"
+          LS_SDK_SHA: "${{ needs.findStaleFollowMergePullRequests.outputs.develop-label-studio-sdk-sha }}"
+        run: |
+          set -xeuo pipefail
+          
+          poetry add "https://github.com/HumanSignal/label-studio/archive/${LSO_SHA}.zip" --lock
+          poetry add "https://github.com/HumanSignal/label-studio-evalme/archive/${LS_EVALME_SHA}.zip" --lock
+          poetry add "https://github.com/HumanSignal/label-studio-sdk/archive/${LS_SDK_SHA}.zip" --lock
+
+          tmp_package_json=$(mktemp)
+          jq --arg newValue "humansignal/label-studio#${LSO_SHA}" '.sourceDependencies["@humansignal/labelstudio"].source = $newValue' web/package.json > "${tmp_package_json}"
+          mv "${tmp_package_json}" web/package.json
+          
+          git diff HEAD
+
+      - name: Update Poetry Lock File
+        continue-on-error: true
+        run: |
+          set -xeuo pipefail
+          poetry lock --no-update
+
+      - name: Setup frontend environment
+        uses: ./.github/actions/setup-frontend-environment
+        continue-on-error: true
+        with:
+          node-version: "${{ env.NODE }}"
+          directory: "${{ env.FRONTEND_MONOREPO_DIR }}"
+          yarn-install: false
+
+      - name: Update Yarn Lock File
+        continue-on-error: true
+        run: |
+          set -xeuo pipefail
+          yarn install
+
+      - name: Git Commit
+        env:
+          COMMIT_MESSAGE: "Follow Merge: Update dependencies"
+          WORKFLOW_LINK: "Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          git add pyproject.toml poetry.lock web/package.json web/yarn.lock
+          git commit -m "${COMMIT_MESSAGE}" -m "${WORKFLOW_LINK}"
+
+      - name: Git Push
+        uses: ./.github/actions-hub/actions/git-push
+
+      - name: Create an empty commit
+        id: find-and-close-prs
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ matrix.pr-number }}
+        with:
+          github-token: ${{ secrets.GIT_PAT }}
+          script: |
+            const { repo, owner } = context.repo;
+            
+            const pull_number = process.env.PR_NUMBER;
+            const authorName = 'robot-ci-heartex';
+            const authorEmail = 'robot-ci-heartex@users.noreply.github.com';
+            
+            async function createEmptyCommit(branch, message, number) {
+              const {data: branchData} = await github.rest.repos.getBranch({
+                owner,
+                repo,
+                branch: branch,
+              });
+              const {data: latestCommit} = await github.rest.repos.getCommit({
+                owner,
+                repo,
+                ref: branchData.commit.sha,
+              });
+              const {data: createdCommit} = await github.rest.git.createCommit({
+                owner,
+                repo,
+                message: `${message} (#${number})`,
+                tree: latestCommit.commit.tree.sha,
+                parents: [latestCommit.sha],
+                author: {
+                  name: authorName,
+                  email: authorEmail
+                }
+              })
+              await github.rest.git.updateRef({
+                owner,
+                repo,
+                ref: `heads/${branch}`,
+                sha: createdCommit.sha,
+              });
+              return createdCommit
+            }
+            
+            const {data: pr} = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number,
+            })
+            
+            const {data: compare} = await github.rest.repos.compareCommits({
+              owner,
+              repo,
+              base: pr.base.ref,
+              head: pr.merge_commit_sha,
+            });
+            
+            
+            console.log(compare.status);
+            console.log(compare.files);
+            core.startGroup(`Compare`);
+            console.log(compare);
+            core.endGroup();
+            
+            if (compare.status === 'identical') {
+              console.log(`Closing Stale Follow Merge PR ${pr.html_url}`)
+              const commit = await createEmptyCommit(pr.base.ref, pr.title, pr.number)
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: [
+                  'Closing this PR as stale',
+                  `Empty commit is created to ${pr.base.ref} branch: ${commit.html_url}`,
+                  '> [Workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+                ].join('\n'),
+              });
+            }
