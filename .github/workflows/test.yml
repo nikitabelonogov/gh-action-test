@@ -337,7 +337,6 @@ jobs:
               head: pr.head.sha,
             });
             
-            
             console.log(compare.status);
             console.log(compare.files);
             core.startGroup(`Compare`);
