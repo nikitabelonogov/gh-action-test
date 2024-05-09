@@ -27,8 +27,6 @@ jobs:
     name: "Changed files"
     if: github.actor == 'nikitabelonogov'
     runs-on: ubuntu-latest
-    needs:
-      - check_gate
     steps:
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
