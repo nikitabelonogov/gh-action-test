@@ -55,9 +55,10 @@ jobs:
 
   hui:
     name: HUI
-    runs-on: ubuntu-latest
+    if: always()
     needs:
       - check_gate
+    runs-on: ubuntu-latest
     steps:
       - run: echo "${{ needs.check_gate.conclusion }}"
       - run: echo "${{ toJSON(needs) }}"
