@@ -18,11 +18,24 @@ env:
   RELEASE_BRANCH_PREFIX: "ls-release/"
 
 jobs:
+  test:
+    - uses: hmarr/debug-action@v3.0.0
+    - run: echo "${{ github.event.pull_request.head.user.login }}"
+    - run: echo "${{ github.head_ref }}"
+    - run: echo "${{ startsWith(github.head_ref, 'dependabot/pip/') }}"
+    - run: echo "${{ startsWith(github.head_ref, 'dependabot/npm_and_yarn/') }}"
+    - run: echo "${{ ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') ) }}"
   dependabot-auto-merge:
     name: "Changed files"
+    needs:
+      - test
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'nikitabelonogov' &&
+      ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') )
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ github.event.pull_request.head.user.login }}"
+      - run: echo "${{ github.event.pull_request.user.login }}"
       - run: echo "${{ github.head_ref }}"
       - run: echo "${{ startsWith(github.head_ref, 'dependabot/pip/') }}"
