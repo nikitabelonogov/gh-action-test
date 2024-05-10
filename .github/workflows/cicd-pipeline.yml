@@ -55,6 +55,7 @@ jobs:
 
   hui:
     name: HUI
+    runs-on: ubuntu-latest
     needs:
       - check_gate
     steps:
