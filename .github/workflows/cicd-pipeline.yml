@@ -1,10 +1,6 @@
 name: "CI/CD Pipeline"
 
 on:
-  push:
-    branches:
-      - develop
-      - 'ls-release/**'
   pull_request:
     types:
       - opened
@@ -13,7 +9,6 @@ on:
       - ready_for_review
     branches:
       - develop
-      - 'ls-release/**'
 
 concurrency:
   group: "CI/CD Pipeline ${{ github.event.pull_request.number || github.event.pull_request.head.ref || github.ref_name }}"
@@ -25,11 +20,9 @@ env:
 jobs:
   dependabot-auto-merge:
     name: "Changed files"
-    if: github.actor == 'nikitabelonogov'
     runs-on: ubuntu-latest
     steps:
-      - name: Enable auto-merge for Dependabot PRs
-        run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GIT_PAT}}
+      - uses: hmarr/debug-action@v3.0.0
+      - run: echo "${{ github.event.pull_request.head.user.login }}"
+      - run: echo "${{ github.head_ref }}"
+      - run: echo "${{ startsWith(github.head_ref, 'dependabot/pip/') }}"
