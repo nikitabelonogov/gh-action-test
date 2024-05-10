@@ -53,13 +53,19 @@ jobs:
           allowed-skips: test, test2
           jobs: ${{ toJSON(needs) }}
 
+  hui:
+    name: HUI
+    needs:
+      - check_gate
+    steps:
+      - run: echo "${{ needs.check_gate.conclusion }}"
+      - run: echo "${{ toJSON(needs) }}"
+
   dependabot-auto-merge:
     name: "AUTO MERGE"
     needs:
       - check_gate
     if: |
-      always() &&
-      needs.check_gate.conclusion == 'success' &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.user.login == 'nikitabelonogov' &&
       ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') )
