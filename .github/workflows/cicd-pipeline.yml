@@ -29,6 +29,8 @@ jobs:
         run: echo "${{ github.head_ref }}"
       - name: "( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') )"
         run: echo "${{ ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') ) }}"
+      - name: "github.event_name == 'pull_request' && github.event.pull_request.user.login == 'nikitabelonogov' && ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') )"
+        run: echo "${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'nikitabelonogov' && ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') ) }}"
 
   test2:
     name: "Test2"
@@ -52,7 +54,7 @@ jobs:
           jobs: ${{ toJSON(needs) }}
 
   dependabot-auto-merge:
-    name: "Changed files"
+    name: "AUTO MERGE"
     needs:
       - check_gate
     if: |
