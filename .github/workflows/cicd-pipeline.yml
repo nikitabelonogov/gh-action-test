@@ -19,19 +19,42 @@ env:
 
 jobs:
   test:
-    name: "Changed files"
+    name: "Test"
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ github.event.pull_request.head.user.login }}"
-      - run: echo "${{ github.head_ref }}"
-      - run: echo "${{ startsWith(github.head_ref, 'dependabot/pip/') }}"
-      - run: echo "${{ startsWith(github.head_ref, 'dependabot/npm_and_yarn/') }}"
-      - run: echo "${{ ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') ) }}"
+      - name: "github.event.pull_request.head.user.login"
+        run: echo "${{ github.event.pull_request.head.user.login }}"
+      - name: "github.head_ref"
+        run: echo "${{ github.head_ref }}"
+      - name: "( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') )"
+        run: echo "${{ ( startsWith(github.head_ref, 'dependabot/npm_and_yarn/') || startsWith(github.head_ref, 'dependabot/pip/') ) }}"
+
+  test2:
+    name: "Test2"
+    runs-on: ubuntu-latest
+    if: false
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+
+  check_gate:
+    name: "Ready to merge"
+    if: always()
+    needs:
+      - test
+      - test2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          allowed-skips: test, test2
+          jobs: ${{ toJSON(needs) }}
+
   dependabot-auto-merge:
     name: "Changed files"
     needs:
-      - test
+      - check_gate
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.user.login == 'nikitabelonogov' &&
@@ -39,6 +62,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ github.event.pull_request.user.login }}"
-      - run: echo "${{ github.head_ref }}"
-      - run: echo "${{ startsWith(github.head_ref, 'dependabot/pip/') }}"
