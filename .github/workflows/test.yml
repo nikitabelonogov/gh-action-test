@@ -42,6 +42,13 @@ jobs:
 
       - run: docker run --name "lso" --rm -p 8080:8080 -d "heartexlabs/label-studio:develop"
 
+      - timeout-minutes: 1
+        run: |
+          while [ "$(curl --write-out "%{http_code}" --silent --output /dev/null "http://localhost:8080/version")" -ne 200 ]; do
+            echo "Service is not available yet. Waiting for 5 seconds..."
+            sleep "5"
+          done
+
       - name: Generate OpenAPI docs
         run: swagger2openapi --yaml --outfile "${{ env.OUTFILE }}" "http://localhost:8080/docs/api?format=openapi"
 
