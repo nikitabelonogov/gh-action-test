@@ -21,6 +21,12 @@ jobs:
           token: ${{ secrets.GIT_PAT }}
           ref: "ci-test"
 
+      - name: Setup node
+        uses: actions/setup-node@v4
+
+      - name: Install swagger2openapi
+        run: npm install -g swagger2openapi
+
       - env:
           COMMIT_MESSAGE: "Update ${{ env.OUTFILE }}"
           WORKFLOW_LINK: "Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
