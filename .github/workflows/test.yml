@@ -5,10 +5,27 @@ on:
     branches:
       - develop
 
+env:
+  OUTFILE: "fern/openapi/openapi.yaml"
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ startsWith(github.ref_name, 'deve') && 'OnPremise' || 'Test' }}"
-      - run: echo "${{ startsWith(github.ref_name, '1deve') && 'OnPremise' || 'Test' }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "HumanSignal/label-studio-client-generator"
+          token: ${{ secrets.GIT_PAT }}
+          ref: "ci-test"
+
+      - env:
+          COMMIT_MESSAGE: "Update ${{ env.OUTFILE }}"
+          WORKFLOW_LINK: "Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          swagger2openapi --yaml --outfile "${{ env.OUTFILE }}" "https://app.heartex.com/docs/api?format=openapi"
+          git add "${{ env.OUTFILE }}"
+          git commit -m "${COMMIT_MESSAGE}" -m "${WORKFLOW_LINK}"
+          git push
