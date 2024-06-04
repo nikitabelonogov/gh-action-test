@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: "HumanSignal/label-studio-client-generator"
+          repository: "humansignal/label-studio-client-generator"
           token: ${{ secrets.GIT_PAT }}
           ref: "ci-test"
 
