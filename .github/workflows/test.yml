@@ -40,13 +40,12 @@ jobs:
       - name: Install swagger2openapi
         run: npm install -g swagger2openapi
 
+      - run: docker run --name "lso" --rm -p 8080:8080 -d "heartexlabs/label-studio:develop"
+
       - name: Generate OpenAPI docs
-        env:
-          CONTAINER_NAME: "lso"
-        run: |
-          docker run --name "${CONTAINER_NAME}" --rm -p 8080:8080 -d "heartexlabs/label-studio:develop"
-          swagger2openapi --yaml --outfile "${{ env.OUTFILE }}" "http://localhost:8080/docs/api?format=openapi"
-          docker kill "${CONTAINER_NAME}"
+        run: swagger2openapi --yaml --outfile "${{ env.OUTFILE }}" "http://localhost:8080/docs/api?format=openapi"
+
+      - run: docker kill "${CONTAINER_NAME}"
 
       - name: Commit changes
         env:
