@@ -6,6 +6,7 @@ on:
       - develop
 
 env:
+  AUTHOR_NAME: 'robot-ci-heartex'
   OUTFILE: "fern/openapi/openapi.yaml"
 
 jobs:
@@ -17,9 +18,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: "humansignal/label-studio-client-generator"
+          repository: "HumanSignal/label-studio-client-generator"
           token: ${{ secrets.GIT_PAT }}
           ref: "ci-test"
+
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          repository: "HumanSignal/actions-hub"
+          path: ./.github/actions-hub
+
+      - name: Git Configure
+        uses: ./.github/actions-hub/actions/git-configure
+        with:
+          username: ${{ env.AUTHOR_NAME }}
 
       - name: Setup node
         uses: actions/setup-node@v4
