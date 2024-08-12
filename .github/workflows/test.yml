@@ -3,7 +3,7 @@ name: "MATRIX TEST"
 on:
   push:
     branches:
-      - master
+      - develop
   workflow_dispatch:
 
 jobs:
@@ -32,6 +32,8 @@ jobs:
       matrix-include: ${{ steps.matrix.outputs.matrix-include }}
     steps:
       - uses: hmarr/debug-action@v3.0.0
+
+      - run: npm install js-yaml
 
       - name: Build matrix
         id: matrix
