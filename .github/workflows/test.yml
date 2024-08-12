@@ -36,7 +36,6 @@ jobs:
       - name: Build matrix
         id: matrix
         uses: actions/github-script@v7
-        shell: bash
         with:
           script: |
             const repositoryFull = 'HumanSignal/label-studio-ml-backend';
