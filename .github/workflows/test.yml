@@ -1,4 +1,4 @@
-name: "MATRIX TEST"
+name: "TEST"
 
 on:
   push:
@@ -7,74 +7,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-image:
-    name: Build image
-    if: needs.calculate_matrix.outputs.matrix-include != '[]'
-    needs: calculate_matrix
-    runs-on: ${{ matrix.runs_on || 'ubuntu-latest' }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.calculate_matrix.outputs.matrix-include) }}
-    env:
-      IMAGE_NAME: heartexlabs/label-studio-ml-backend
-      examples_dir: label_studio_ml/examples
-      backend_dir_name: ${{ matrix.backend_dir_name }}
-      backend_tag_prefix: ${{ matrix.backend_tag_prefix }}
+  test:
+    runs-on: "ubuntu-latest"
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-  calculate_matrix:
-    name: "Calculate build matrix"
-    runs-on: ubuntu-latest
-    outputs:
-      matrix-include: ${{ steps.matrix.outputs.matrix-include }}
-    steps:
-      - uses: hmarr/debug-action@v3.0.0
-
-      - run: npm install js-yaml
-
-      - name: Build matrix
-        id: matrix
-        uses: actions/github-script@v7
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
         with:
-          script: |
-            const yaml = require('js-yaml');
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
 
-            const repositoryFull = 'HumanSignal/label-studio-ml-backend';
-  
-            const [owner, repo] = repositoryFull.split('/')
-            
-            const default_branch = "master";
-            const docker_build_config_path = ".github/docker-build-config.yml";
-            const docker_examples_directory = "label_studio_ml/examples";
-            
-            const from_ref = "master~10";
-            const to_ref = "master";
-            
-            const {data: compare} = await github.rest.repos.compareCommits({
-              owner,
-              repo,
-              base: from_ref,
-              head: to_ref,
-            });
-            console.log(compare.files.map(e => e.filename));
-            
-            const docker_build_config_blob = await github.rest.repos.getContent({
-              owner: owner,
-              repo: repo,
-              ref: default_branch,
-              path: docker_build_config_path,
-            });
-            const docker_build_config_content = Buffer.from(docker_build_config_blob.data.content, docker_build_config_blob.data.encoding).toString("utf8");
-            const docker_build_config = yaml.load(docker_build_config_content);
-            
-            let matrixInclude = [];
-            for (const dockerBuildConfigElement of docker_build_config) {
-              if(compare.files.some(e => e.filename.startsWith(`${docker_examples_directory}/${dockerBuildConfigElement.backend_dir_name}`))) {
-                matrixInclude.push(dockerBuildConfigElement);
-              }
-            }
-            console.log(matrixInclude);
-            core.setOutput("matrix-include", matrixInclude);
+      - name: Generate release changelog
+        id: changelog_md
+        uses: ./.github/actions-hub/actions/github-generate-changelog
+        with:
+          release_version: "2.14.1.dev12"
+          previous_ref: "tags/2.14.1.dev11"
+          current_ref: "52318f488d7d3fc062861efb5ac52e6cbaf5211d"
+          github_token: "${{ secrets.GIT_PAT }}"
+          jira_server: "https://humansignal.atlassian.net"
+          jira_username: "${{ secrets.JIRA_USERNAME }}"
+          jira_token: "${{ secrets.JIRA_TOKEN }}"
+          jira_release_prefix: "LSE SaaS"
+          repository: "HumanSignal/label-studio-enterprise"
+
+
+      - run: echo "${{ steps.changelog_md.outputs.changelog_msg_b64 }}"
+      - run: echo "${{ steps.changelog_md.outputs.changelog_md }}"
+      - run: echo "${{ steps.changelog_md.outputs.changelog_json }}"
