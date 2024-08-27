@@ -33,7 +33,8 @@ jobs:
           jira_release_prefix: "LSE SaaS"
           repository: "HumanSignal/label-studio-enterprise"
 
-
       - run: echo "${{ steps.changelog_md.outputs.changelog_msg_b64 }}"
       - run: echo "${{ steps.changelog_md.outputs.changelog_md }}"
       - run: echo "${{ steps.changelog_md.outputs.changelog_json }}"
+      - run: echo "${{ env.CHANGELOG_JSON }}"
+      - run: echo "${{ env.CHANGELOG_MD }}"
