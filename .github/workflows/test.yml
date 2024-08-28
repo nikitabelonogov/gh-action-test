@@ -78,7 +78,7 @@ jobs:
         id: get-branch
         with:
           github_token: ${{ secrets.GIT_PAT }}
-          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
+          repository: "HumanSignal/${{ env.DOCS_REPO_NAME }}"
           branch_name: "docs-saas-release-notes-${{ steps.details.outputs.date }}"
 
       - name: Configure git
@@ -91,7 +91,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
+          repository: "HumanSignal/${{ env.DOCS_REPO_NAME }}"
           token: ${{ secrets.GIT_PAT }}
           ref: ${{ github.event.client_payload.branch_name }}
           path: "${{ env.DOCS_REPO_NAME }}"
@@ -154,7 +154,7 @@ jobs:
         id: get-pr
         with:
           github_token: ${{ secrets.GIT_PAT }}
-          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
+          repository: "HumanSignal/${{ env.DOCS_REPO_NAME }}"
           branch_name: "${{ steps.get-branch.outputs.branch_name }}"
           title: "${{ github.event.client_payload.title }}"
 
