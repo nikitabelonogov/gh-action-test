@@ -156,7 +156,7 @@ jobs:
           github_token: ${{ secrets.GIT_PAT }}
           repository: "HumanSignal/${{ env.DOCS_REPO_NAME }}"
           branch_name: "${{ steps.get-branch.outputs.branch_name }}"
-          title: "${{ github.event.client_payload.title }}"
+          title: "docs: Add SaaS release notes for ${{ steps.details.outputs.date }}"
 
       - name: Add PR Reviewers
         uses: ./.github/actions-hub/actions/github-add-pull-request-reviewers
