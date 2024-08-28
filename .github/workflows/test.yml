@@ -93,7 +93,7 @@ jobs:
         with:
           repository: "HumanSignal/${{ env.DOCS_REPO_NAME }}"
           token: ${{ secrets.GIT_PAT }}
-          ref: ${{ github.event.client_payload.branch_name }}
+          ref: "${{ steps.get-branch.outputs.branch_name }}"
           path: "${{ env.DOCS_REPO_NAME }}"
 
       - name: Generate release changelog
