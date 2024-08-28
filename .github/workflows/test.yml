@@ -139,7 +139,7 @@ jobs:
           EOF
 
           cat "${tmp_header_file}" > "${release_note_file}"
-          cat "${tmp_release_notes_file}" | grep -v "^>" | grep -v "\- \[internal\]" >> "${release_note_file}"
+          cat "${tmp_release_notes_file}" | grep -v "^>" | grep -vi "\- \[internal\]" >> "${release_note_file}"
 
           git add "${release_note_file}"
           git commit -m "${COMMIT_MESSAGE}" -m "${COMMIT_WORKFLOW_LINK}"
