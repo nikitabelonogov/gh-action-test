@@ -1,16 +1,70 @@
-name: "TEST"
+name: "SaaS: Release Notes Documentation"
 
 on:
-  push:
-    branches:
-      - develop
+  schedule:
+    - cron: '0 2 1,15 * *'
   workflow_dispatch:
 
+env:
+  DOCS_REPO_NAME: "label-studio"
+  DOCS_REPO_BASE_BRANCH: develop
+  DOCS_REPO_RELEASE_NOTES_PATH: "docs/source/guide/release_notes/saas"
+  REVIEWERS: "caitlinwheeless"
+
 jobs:
-  test:
-    runs-on: "ubuntu-latest"
+  release_notes:
+    runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
+
+
+      - name: Details
+        id: details
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GIT_PAT }}
+          script: |
+            const { repo, owner } = context.repo;
+            const today = new Date();
+            core.setOutput("date", today.toISOString().split('T')[0]);
+            const recentDate = new Date();
+            recentDate.setDate(recentDate.getDate() - 15);
+            
+            const tags = await github.paginate(
+              github.rest.repos.listTags,
+              {
+                owner,
+                repo,
+                per_page: 100,
+              },
+              (response) => response.data
+            );
+            
+            const recentTags = [];
+            for (const tag of tags) {
+              if (!tag.name.includes('dev')) continue;
+            
+              try {
+                const commitResponse = await github.rest.git.getCommit({
+                  owner,
+                  repo,
+                  commit_sha: tag.commit.sha,
+                });
+            
+                const commitDate = new Date(commitResponse.data.committer.date);
+                if (commitDate > recentDate) {
+                  core.info(`Including ${tag.name} ${commitDate}`)
+                  recentTags.push(tag);
+                } else {
+                  break;
+                }
+              } catch (e) {
+                core.warning(`Could not get commit for tag ${tag.name}`)
+              }
+            }
+            
+            core.setOutput("current_ref", `tags/${recentTags[0].name}`);
+            core.setOutput("previous_ref", `tags/${recentTags[recentTags.length - 1].name}`);
 
       - name: Checkout Actions Hub
         uses: actions/checkout@v4
@@ -19,22 +73,93 @@ jobs:
           repository: HumanSignal/actions-hub
           path: ./.github/actions-hub
 
+      - name: Find or Create branch
+        uses: ./.github/actions-hub/actions/github-find-or-create-branch
+        id: get-branch
+        with:
+          github_token: ${{ secrets.GIT_PAT }}
+          branch_name: "docs-saas-release-notes-${{ steps.details.outputs.date }}"
+
+      - name: Configure git
+        shell: bash
+        run: |
+          set -xeuo pipefail
+          git config --global user.name 'robot-ci-heartex'
+          git config --global user.email 'robot-ci-heartex@users.noreply.github.com'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
+          token: ${{ secrets.GIT_PAT }}
+          ref: ${{ github.event.client_payload.branch_name }}
+          path: "${{ env.DOCS_REPO_NAME }}"
+
       - name: Generate release changelog
         id: changelog_md
         uses: ./.github/actions-hub/actions/github-generate-changelog
         with:
-          release_version: "2.14.1.dev12"
-          previous_ref: "tags/2.14.1.dev11"
-          current_ref: "52318f488d7d3fc062861efb5ac52e6cbaf5211d"
+          release_version: "${{ steps.details.outputs.date }}"
+          previous_ref: "${{ steps.details.outputs.previous_ref }}"
+          current_ref: "${{ steps.details.outputs.current_ref }}"
           github_token: "${{ secrets.GIT_PAT }}"
-          jira_server: "https://humansignal.atlassian.net"
+          jira_server: "${{ vars.JIRA_SERVER }}"
           jira_username: "${{ secrets.JIRA_USERNAME }}"
           jira_token: "${{ secrets.JIRA_TOKEN }}"
-          jira_release_prefix: "LSE SaaS"
-          repository: "HumanSignal/label-studio-enterprise"
 
-      - run: echo "${{ steps.changelog_md.outputs.changelog_msg_b64 }}"
-      - run: echo "${{ steps.changelog_md.outputs.changelog_md }}"
-      - run: echo "${{ steps.changelog_md.outputs.changelog_json }}"
-      - run: echo "${{ env.CHANGELOG_JSON }}"
-      - run: echo "${{ env.CHANGELOG_MD }}"
+      - name: Commit Release Notes to branch
+        id: make-commit
+        env:
+          VERSION: "${{ steps.details.outputs.date }}"
+          COMMIT_MESSAGE: "docs: Add saas release notes for ${{ steps.details.outputs.date }}"
+          COMMIT_WORKFLOW_LINK: "Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        working-directory: "${{ env.DOCS_REPO_NAME }}"
+        run: |
+          set -euo pipefail
+          
+          mkdir -p "${DOCS_REPO_RELEASE_NOTES_PATH}"
+          release_note_file="${DOCS_REPO_RELEASE_NOTES_PATH}/${VERSION}.md"          
+          tmp_header_file=$(mktemp)
+          tmp_release_notes_file=$(mktemp)
+
+          cat << EOF > "${tmp_header_file}"
+          ---
+          hide_sidebar: true
+          ---
+
+          *$(date '+%b %d, %Y')*
+
+          ## Label Studio Enterprise SaaS ${VERSION}
+          EOF
+
+          cat << 'EOF' > "${tmp_release_notes_file}"
+          ${{ env.CHANGELOG_MD }}
+          EOF
+
+          cat "${tmp_header_file}" > "${release_note_file}"
+          cat "${tmp_release_notes_file}" | grep -v "^>" | grep -v "\- \[internal\]" >> "${release_note_file}"
+
+          git add "${release_note_file}"
+          git commit -m "${COMMIT_MESSAGE}" -m "${WORKFLOW_LINK}"
+
+      - name: Git Push
+        uses: ./.github/actions-hub/actions/git-push
+        with:
+          working_directory: "${{ env.DOCS_REPO_NAME }}"
+
+      - name: Find or Create PR
+        uses: ./.github/actions-hub/actions/github-find-or-create-pull-request
+        id: get-pr
+        with:
+          github_token: ${{ secrets.GIT_PAT }}
+          branch_name: "${{ steps.get-branch.outputs.branch_name }}"
+          title: "${{ github.event.client_payload.title }}"
+
+      - name: Add PR Reviewers
+        uses: ./.github/actions-hub/actions/github-add-pull-request-reviewers
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GIT_PAT }}
+          pullrequest_number: "${{ steps.get-pr.outputs.number }}"
+          reviewers: "${{ env.REVIEWERS }}"
+
