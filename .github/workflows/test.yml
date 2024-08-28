@@ -17,14 +17,14 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-
       - name: Details
         id: details
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
-            const { repo, owner } = context.repo;
+            const owner = "HumanSignal";
+            const repo = "label-studio-enterprise";
             const today = new Date();
             core.setOutput("date", today.toISOString().split('T')[0]);
             const recentDate = new Date();
@@ -78,6 +78,7 @@ jobs:
         id: get-branch
         with:
           github_token: ${{ secrets.GIT_PAT }}
+          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
           branch_name: "docs-saas-release-notes-${{ steps.details.outputs.date }}"
 
       - name: Configure git
@@ -99,6 +100,7 @@ jobs:
         id: changelog_md
         uses: ./.github/actions-hub/actions/github-generate-changelog
         with:
+          repository: "HumanSignal/label-studio-enterprise"
           release_version: "${{ steps.details.outputs.date }}"
           previous_ref: "${{ steps.details.outputs.previous_ref }}"
           current_ref: "${{ steps.details.outputs.current_ref }}"
@@ -152,6 +154,7 @@ jobs:
         id: get-pr
         with:
           github_token: ${{ secrets.GIT_PAT }}
+          repository: "${{ github.repository_owner }}/${{ env.DOCS_REPO_NAME }}"
           branch_name: "${{ steps.get-branch.outputs.branch_name }}"
           title: "${{ github.event.client_payload.title }}"
 
@@ -162,4 +165,3 @@ jobs:
           github_token: ${{ secrets.GIT_PAT }}
           pullrequest_number: "${{ steps.get-pr.outputs.number }}"
           reviewers: "${{ env.REVIEWERS }}"
-
