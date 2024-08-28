@@ -142,7 +142,7 @@ jobs:
           cat "${tmp_release_notes_file}" | grep -v "^>" | grep -v "\- \[internal\]" >> "${release_note_file}"
 
           git add "${release_note_file}"
-          git commit -m "${COMMIT_MESSAGE}" -m "${WORKFLOW_LINK}"
+          git commit -m "${COMMIT_MESSAGE}" -m "${COMMIT_WORKFLOW_LINK}"
 
       - name: Git Push
         uses: ./.github/actions-hub/actions/git-push
