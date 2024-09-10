@@ -30,6 +30,7 @@ jobs:
           token: ${{ secrets.GIT_PAT }}
           repository: HumanSignal/actions-hub
           path: ./.github/actions-hub
+          ref: test2
 
       - name: Parse Follow Merge dispatch event payload
         uses: ./.github/actions-hub/actions/follow-merge-parse-payload
