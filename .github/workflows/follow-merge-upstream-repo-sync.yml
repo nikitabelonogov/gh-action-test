@@ -1,0 +1,49 @@
+name: 'Follow Merge: Upstream repo sync'
+
+on:
+  repository_dispatch:
+    types:
+      - upstream_repo_update
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.client_payload.branch_name }}
+
+env:
+  RELEASE_BRANCH_PREFIX: "ls-release/"
+  DOCS_TARGET_DIR: "docs/source/tags/"
+  UPSTREAM_REPO_WORKDIR: "upstream"
+
+jobs:
+  open:
+    name: Sync PR
+    if: |
+      github.event.client_payload.event_action == 'opened' ||
+      github.event.client_payload.event_action == 'synchronize' ||
+      github.event.client_payload.event_action == 'merged'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
+
+      - name: Parse Follow Merge dispatch event payload
+        uses: ./.github/actions-hub/actions/follow-merge-parse-payload
+        id: fm
+
+      - run: |
+          echo '${{ steps.fm.outputs.branch_name }}'
+          echo '${{ steps.fm.outputs.base_branch_name }}'
+          echo '${{ steps.fm.outputs.repo_name }}'
+          echo '${{ steps.fm.outputs.commit_sha }}'
+          echo '${{ steps.fm.outputs.title }}'
+          echo '${{ steps.fm.outputs.pr_html_url }}'
+          echo '${{ steps.fm.outputs.pr_number }}'
+          echo '${{ steps.fm.outputs.actor }}'
+          echo '${{ steps.fm.outputs.author_username }}'
+          echo '${{ steps.fm.outputs.author_email }}'
+          echo '${{ steps.fm.outputs.event_action }}'
