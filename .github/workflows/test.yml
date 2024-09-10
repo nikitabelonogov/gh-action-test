@@ -1,9 +1,7 @@
 name: "Test"
 
 on:
-  push:
-    branches:
-      - develop
+  pull_request:
 
 jobs:
   test:
@@ -11,13 +9,16 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Checkout
-        if: github.event_name == 'push'
+      - name: Checkout Actions Hub
         uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v3
-        id: changes
         with:
-          filters: |
-            src:
-              - 'scripts/*.py'
+          repository: "HumanSignal/actions-hub"
+          token: ${{ secrets.GIT_PAT }}
+          path: ./.github/actions-hub
+          ref: test2
+
+      - name: Dispatch Follow Merge Event
+        uses: ./.github/actions-hub/actions/follow-merge-dispatch
+        with:
+          github_token: ${{ secrets.GIT_PAT }}
+          downstream_repository: "gh-action-test"
