@@ -1,2 +1,2 @@
-# TEST 2
+# TEST
 # gh-action-test
