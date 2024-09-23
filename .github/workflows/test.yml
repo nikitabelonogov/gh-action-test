@@ -1,13 +1,13 @@
 name: "Test"
 
 on:
-  pull_request:
-    types:
-      - opened
-      - closed
-      - converted_to_draft
-      - ready_for_review
-      - synchronize
+  workflow_dispatch:
+    inputs:
+      yes:
+        description: 'YES'
+        required: true
+        default: 'yes'
+        type: string
 
 jobs:
   test:
@@ -15,16 +15,12 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Checkout Actions Hub
-        uses: actions/checkout@v4
-        with:
-          repository: "HumanSignal/actions-hub"
-          token: ${{ secrets.GIT_PAT }}
-          path: ./.github/actions-hub
-          ref: test2
+      - run: echo ${{ inputs.yes }}
 
-      - name: Dispatch Follow Merge Event
-        uses: ./.github/actions-hub/actions/follow-merge-dispatch
-        with:
-          github_token: ${{ secrets.GIT_PAT }}
-          downstream_repository: "gh-action-test"
+  test2:
+    if: inputs.yes == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+
+      - run: echo ${{ inputs.yes }}
