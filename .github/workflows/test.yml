@@ -3,10 +3,15 @@ name: "Test"
 on:
   workflow_dispatch:
     inputs:
-      test:
-        description: 'test'
+      deploy_to_prod:
+        description: 'deploy_to_prod'
         required: true
-        default: 'test'
+        default: true
+        type: boolean
+      sure:
+        description: 'sure'
+        required: true
+        default: 'sure'
         type: string
 
 jobs:
@@ -15,12 +20,12 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - run: echo ${{ inputs.test }}
+      - run: echo ${{ inputs.deploy_to_prod }} ${{ inputs.sure }}
 
   test2:
-    if: inputs.test == 'test'
+    if: inputs.deploy_to_prod == 'true' && contains(inputs.sure, 'sure')
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - run: echo ${{ inputs.test }}
+      - run: echo ${{ inputs.deploy_to_prod }} ${{ inputs.sure }}
