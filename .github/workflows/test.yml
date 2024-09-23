@@ -21,11 +21,11 @@ jobs:
       - uses: hmarr/debug-action@v3.0.0
 
       - run: echo ${{ inputs.deploy_to_prod }} ${{ inputs.sure }}
-      - run: echo ${{ inputs.deploy_to_prod == 'true' }}
+      - run: echo ${{ inputs.deploy_to_prod }}
       - run: echo ${{ contains(inputs.sure, 'sure') }}
 
   test2:
-    if: inputs.deploy_to_prod == 'true' && contains(inputs.sure, 'sure')
+    if: inputs.deploy_to_prod && contains(inputs.sure, 'sure')
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
