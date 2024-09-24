@@ -1,18 +1,7 @@
 name: "Test"
 
 on:
-  workflow_dispatch:
-    inputs:
-      deploy_to_prod:
-        description: 'deploy_to_prod'
-        required: true
-        default: true
-        type: boolean
-      sure:
-        description: 'sure'
-        required: true
-        default: 'sure'
-        type: string
+  push:
 
 jobs:
   test:
@@ -20,14 +9,19 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - run: echo ${{ inputs.deploy_to_prod }} ${{ inputs.sure }}
-      - run: echo ${{ inputs.deploy_to_prod }}
-      - run: echo ${{ contains(inputs.sure, 'sure') }}
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
 
-  test2:
-    if: inputs.deploy_to_prod && contains(inputs.sure, 'sure')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: hmarr/debug-action@v3.0.0
-
-      - run: echo ${{ inputs.deploy_to_prod }} ${{ inputs.sure }}
+      - name: Create ArgoCD App
+        uses: ./.github/actions-hub/actions/argocd-app-create
+        with:
+          docker_image_tag: "20240723.220544-fb-dia-1287-877855a"
+          app_name: "gh-test-adala"
+          template_name: "adala"
+          cluster: "dev.heartex.com"
+          namespace: "prompt"
+          github_token: ${{ secrets.GIT_PAT }}
