@@ -17,7 +17,7 @@ jobs:
           path: ./.github/actions-hub
 
       - name: Create ArgoCD App
-        uses: ./.github/actions-hub/actions/argocd-app-create
+        uses: HumanSignal/actions-hub/.github/actions-hub/actions/argocd-app-create@master
         with:
           docker_image_tag: "20240723.220544-fb-dia-1287-877855a"
           app_name: "gh-test-adala"
