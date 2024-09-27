@@ -11,4 +11,7 @@ runs:
     - name: TEST
       shell: bash
       run: |
-        echo "${{ inputs.map }}"
+        eval "${{ inputs.map }}"
+        
+        echo "${FOO}"
+        echo "${BAZ}"

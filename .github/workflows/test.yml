@@ -17,4 +17,4 @@ jobs:
         with:
           map: |
             FOO=bar
-            BAZ=BOO
+            BAZ=boo
