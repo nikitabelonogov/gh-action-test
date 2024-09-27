@@ -15,7 +15,6 @@ jobs:
       - name: Create ArgoCD App
         uses: ./.github/actions/test
         with:
-          map:
-            FOO: bar
-            BAZ: BOO
-
+          map: |
+            FOO=bar
+            BAZ=BOO
