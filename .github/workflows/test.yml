@@ -9,19 +9,13 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Checkout Actions Hub
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GIT_PAT }}
-          repository: HumanSignal/actions-hub
-          path: ./.github/actions-hub
 
       - name: Create ArgoCD App
-        uses: ./.github/actions-hub/actions/argocd-app-create
+        uses: ./.github/actions/test
         with:
-          docker_image_tag: "20240723.220544-fb-dia-1287-877855a"
-          app_name: "gh-test-adala"
-          template_name: "adala"
-          cluster: "dev.heartex.com"
-          namespace: "prompt"
-          github_token: ${{ secrets.GIT_PAT }}
+          map:
+            FOO: bar
+            BAZ: BOO
+

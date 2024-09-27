@@ -1,0 +1,14 @@
+name: TEST
+description: TEST
+
+inputs:
+  map:
+    description: Application Name
+
+runs:
+  using: "composite"
+  steps:
+    - name: TEST
+      shell: bash
+      run: |
+        echo "${{ inputs.map }}"
