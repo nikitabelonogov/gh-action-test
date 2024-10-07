@@ -1,20 +1,26 @@
 name: "Test"
 
 on:
-  push:
+  workflow_dispatch:
+    inputs:
+      client_payload:
+        description: "Payload from Zendesk"
+        required: true
+        type: string
 
 jobs:
-  test:
+  close_issue:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create ArgoCD App
-        uses: ./.github/actions/test
+      - uses: actions/github-script@v5
         with:
-          map: |
-            FOO=bar
-            BAZ=boo
+          github-token: ${{ secrets.GIT_PAT }}
+          script: |
+            try {
+              // Parse the client payload (received from Zendesk)
+              const payload = JSON.parse(inputs.client_payload);
+
+              // Log the parsed payload for debugging
+              console.log("Parsed payload: ", JSON.stringify(payload, null, 2));
