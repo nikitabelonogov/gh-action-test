@@ -20,9 +20,8 @@ jobs:
         with:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
-            try {
-              // Parse the client payload (received from Zendesk)
-              const payload = JSON.parse(process.env.PAYLOAD);
+            // Parse the client payload (received from Zendesk)
+            const payload = JSON.parse(process.env.PAYLOAD);
 
-              // Log the parsed payload for debugging
-              console.log("Parsed payload: ", JSON.stringify(payload, null, 2));
+            // Log the parsed payload for debugging
+            console.log("Parsed payload: ", JSON.stringify(payload, null, 2));
