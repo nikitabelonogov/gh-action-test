@@ -20,7 +20,7 @@ jobs:
         with:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
-            core.info(context);
+            core.info(JSON.stringify(context));
             core.info(process.env.PAYLOAD);
             core.startGroup("Parsed payload");
             const payload = JSON.parse(process.env.PAYLOAD);
