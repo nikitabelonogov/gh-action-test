@@ -25,6 +25,6 @@ jobs:
             core.info(context.payload.inputs);
             core.info(context.payload.inputs.client_payload);
             core.startGroup("Parsed payload");
-            const payload = JSON.parse(context.payload.client_payload);
+            const payload = JSON.parse(context.payload.inputs.client_payload);
             core.info(JSON.stringify(payload, null, 2));
             core.endGroup();
