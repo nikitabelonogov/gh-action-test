@@ -21,7 +21,7 @@ jobs:
           github-token: ${{ secrets.GIT_PAT }}
           script: |
             core.info(JSON.stringify(context));
-            core.info(context.payload.client_payload);
+            core.info(context.payload.inputs.client_payload);
             core.startGroup("Parsed payload");
             const payload = JSON.parse(context.payload.client_payload);
             core.info(JSON.stringify(payload, null, 2));
