@@ -18,7 +18,9 @@ jobs:
 
       - run: echo "${{ inputs.a == 'a' }}"
 
-      - run: echo "${{ inputs.a == 'b' }}"
+      - run: echo "${{ inputs.a == 'b' && '' || ''}}"
+
+      - run: echo "${{ inputs.a == 'a' && 'a' || 'b'}}"
 
       - uses: ./.github/actions/action
         with:
