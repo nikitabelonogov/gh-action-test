@@ -18,10 +18,8 @@ jobs:
 
       - id: id
         uses: actions/github-script@v7
-        with:
-          script: |
-            const a = 'a';
-            const release_override = `
+        env:
+          RELEASE_OVERRIDE_VALUES: |
             global:
               extraEnvironmentVars:
                 FEATURE_FLAGS_OFFLINE: true
@@ -32,15 +30,11 @@ jobs:
             rqworker:
               tolerations: null
               affinity: null
-            `;
-            
-            if ( a === 'a') {
-              core.setOutput('override', release_override)
-            } else {
-              core.setOutput('override', '')
-            }
-            
+        with:
+          script: |
+            const release_override_values = process.env.RELEASE_OVERRIDE_VALUES;
+            core.setOutput('override_values', release_override_values)
 
       - uses: ./.github/actions/action
         with:
-          override_values: "${{ steps.id.outputs.override }}"
+          override_values: "${{ steps.id.outputs.override_values }}"
