@@ -19,6 +19,6 @@ jobs:
       - uses: ./.github/actions/action
         with:
           override_values: |
-            hui1
+            ${{ inputs.a == 'a' && '' || 'hui1
             hui2
-            hui3
+            hui3'}}
