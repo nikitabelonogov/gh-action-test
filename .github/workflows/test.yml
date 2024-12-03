@@ -3,27 +3,20 @@ name: "Test"
 on:
   workflow_dispatch:
     inputs:
-      client_payload:
+      a:
         description: "Payload from Zendesk"
         required: true
         type: string
 
 jobs:
-  close_issue:
+  job:
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - uses: actions/github-script@v7
+      - uses: ./.github/actions/action
         with:
-          github-token: ${{ secrets.GIT_PAT }}
-          script: |
-            const sanitizedClientPayloadRaw = context.payload.inputs.client_payload
-              .trim()
-              .replaceAll("\n", "\\n")
-              .replaceAll("\r", "\\r");
-            
-            core.startGroup("Parsed payload");
-            const payload = JSON.parse(sanitizedClientPayloadRaw);
-            core.info(JSON.stringify(payload, null, 2));
-            core.endGroup();
+          override_values: |
+            hui1
+            hui2
+            hui3
