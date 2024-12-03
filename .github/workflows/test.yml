@@ -18,6 +18,8 @@ jobs:
 
       - run: echo "${{ inputs.a == 'a' }}"
 
+      - run: echo "${{ inputs.a == 'b' }}"
+
       - uses: ./.github/actions/action
         with:
           override_values: |
