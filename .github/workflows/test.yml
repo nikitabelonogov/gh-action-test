@@ -18,13 +18,13 @@ jobs:
 
       - run: echo "${{ inputs.a == 'a' }}"
 
-      - run: echo "${{ inputs.a == 'b' && '' || ''}}"
+      - run: echo "${{ inputs.a == 'b' }}"
 
-      - run: echo "${{ inputs.a == 'a' && 'a' || 'b'}}"
+      - run: echo "${{ inputs.a == 'a' && 'a' || 'b' }}"
 
       - uses: ./.github/actions/action
         with:
           override_values: |
-            ${{ inputs.a == 'a' && '' || 'hui1
+            ${{ inputs.a == 'a' && ' ' || 'hui1
             hui2
-            hui3'}}
+            hui3' }}
