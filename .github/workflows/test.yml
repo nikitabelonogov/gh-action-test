@@ -1,40 +1,40 @@
 name: "Test"
 
 on:
-  workflow_dispatch:
-    inputs:
-      a:
-        description: "Payload from Zendesk"
-        required: true
-        type: string
+  push:
+    branches:
+      - 'develop'
+
+permissions:
+  contents: write
 
 jobs:
-  job:
+  docker_build_and_push:
+    name: "Test"
     runs-on: ubuntu-latest
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - uses: actions/checkout@v4
-
-      - id: id
+      - name: Create Docker image tag Check
         uses: actions/github-script@v7
-        env:
-          RELEASE_OVERRIDE_VALUES: |
-            global:
-              extraEnvironmentVars:
-                FEATURE_FLAGS_OFFLINE: true
-                FEATURE_FLAGS_FROM_FILE: true
-            app:
-              tolerations: null
-              affinity: null
-            rqworker:
-              tolerations: null
-              affinity: null
         with:
           script: |
-            const release_override_values = process.env.RELEASE_OVERRIDE_VALUES;
-            core.setOutput('override_values', release_override_values)
-
-      - uses: ./.github/actions/action
-        with:
-          override_values: "${{ steps.id.outputs.override_values }}"
+            const { repo, owner } = context.repo;
+            const { data: check } = await github.rest.checks.create({
+              owner,
+              repo,
+              name: 'Test Check',
+              head_sha: '${{ github.sha }}',
+              status: 'in_progress',
+              output: {
+                title: 'TEST TITLE',
+                summary: 'test summary',
+              }
+            });
+            await github.rest.checks.update({
+              owner,
+              repo,
+              check_run_id: check.id,
+              status: 'completed',
+              conclusion: 'success'
+            });
