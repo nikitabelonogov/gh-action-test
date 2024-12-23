@@ -5,13 +5,14 @@ on:
     branches:
       - 'develop'
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   docker_build_and_push:
     name: "Test"
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
