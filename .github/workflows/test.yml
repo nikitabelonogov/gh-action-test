@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      checks: write
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
