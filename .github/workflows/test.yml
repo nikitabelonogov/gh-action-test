@@ -10,7 +10,7 @@ jobs:
     name: "Test"
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       checks: write
     steps:
       - uses: hmarr/debug-action@v3.0.0
