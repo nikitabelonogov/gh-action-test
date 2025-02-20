@@ -20,13 +20,14 @@ jobs:
           path: ./.github/actions-hub
 
       - name: Get Upstream PRs
-        uses: ./.github/actions-hub/actions/github-find-or-create-branch
+        uses: ./.github/actions-hub/actions/follow-merge-upstream-prs
         id: upstream-prs
         with:
           branch_name: "fb-chore-cherry-pick-fixes-into-2.20.1"
           repository: "HumanSignal/label-studio-enterprise"
           poetry_repositories: "label-studio"
           infra_repositories: ""
+          github_token: "${{ secrets.GIT_PAT }}"
 
       - run: |
           echo "${{ steps.upstream-prs.outputs.shas }}"
