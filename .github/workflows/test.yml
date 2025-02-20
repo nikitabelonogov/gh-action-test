@@ -30,7 +30,8 @@ jobs:
           github_token: "${{ secrets.GIT_PAT }}"
 
       - run: |
-          echo "${{ steps.upstream-prs.outputs.shas }}"
+          echo "${{ fromJSON(steps.upstream-prs.outputs.shas).label-studio }}"
+          echo "${{ fromJSON(steps.upstream-prs.outputs.shas).Adala }}"
           echo "${{ steps.upstream-prs.outputs.status }}"
           echo "${{ steps.upstream-prs.outputs.base_branch_name }}"
           echo "${{ steps.upstream-prs.outputs.assignees }}"
