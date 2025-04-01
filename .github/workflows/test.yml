@@ -54,11 +54,18 @@ jobs:
               repo,
               name: check_name,
               head_sha: sha,
-              status: 'completed',
+              status: 'in_progress',
               conclusion: conclusion,
               output: {
                 title: check_name,
                 summary: check_name,
               }
+            });
+            await github.rest.checks.update({
+              owner,
+              repo,
+              check_run_id: check.id,
+              status: 'completed',
+              conclusion: 'success'
             });
             core.info(`Check created: ${check.html_url}`);
