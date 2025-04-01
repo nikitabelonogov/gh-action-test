@@ -40,7 +40,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHECK_NAME: "External Check"
+          CHECK_NAME: "External Check 2"
           SHA: ${{ inputs.sha }}
           CONCLUSION: ${{ inputs.conclusion || 'success' }}
         with:
