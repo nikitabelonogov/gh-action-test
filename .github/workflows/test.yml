@@ -1,27 +1,13 @@
 name: "External Check"
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
-    branches:
-      - develop
-      - 'ls-release/**'
   workflow_dispatch:
     inputs:
-      sha:
-        required: true
-        type: string
-      conclusion:
+      cluster:
+        description: "Cluster name"
         required: false
-        type: choice
-        default: "success"
-        options:
-          - "failure"
-          - "success"
+        default: "dev.heartex.com"
+        type: string
 
 
 permissions:
@@ -35,37 +21,30 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Create Check
-        if: inputs.sha
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHECK_NAME: "External Check 2"
-          SHA: ${{ inputs.sha }}
-          CONCLUSION: ${{ inputs.conclusion || 'success' }}
-        with:
-          script: |
-            const { repo, owner } = context.repo;
-            const check_name = process.env.CHECK_NAME;
-            const sha = process.env.SHA;
-            const conclusion = process.env.CONCLUSION;
-            const { data: check } = await github.rest.checks.create({
-              owner,
-              repo,
-              name: check_name,
-              head_sha: sha,
-              status: 'in_progress',
-              conclusion: conclusion,
-              output: {
-                title: check_name,
-                summary: check_name,
-              }
-            });
-            await github.rest.checks.update({
-              owner,
-              repo,
-              check_run_id: check.id,
-              status: 'completed',
-              conclusion: 'success'
-            });
-            core.info(`Check created: ${check.html_url}`);
+      - id: details
+        run: |
+          case "${{ inputs.cluster }}" in
+            'dev.heartex.com')
+              echo "argocd_url=argocd.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
+              echo "argocd_token=${{ secrets.ARGOCD_DEV_TOKEN }}" >> "${GITHUB_OUTPUT}"
+              echo "grafana_url=grafana.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
+              ;;
+            'app.heartex.com')
+              echo "argocd_url=argocd.humansignal.com" >> "${GITHUB_OUTPUT}"
+              echo "argocd_token=${{ secrets.ARGOCD_US_PROD_TOKEN }}" >> "${GITHUB_OUTPUT}"
+              echo "grafana_url=grafana.humansignal.com" >> "${GITHUB_OUTPUT}"
+              ;;
+            'app.humansignal.eu')
+              echo "argocd_url=argocd.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
+              echo "argocd_token=${{ secrets.ARGOCD_EU_PROD_TOKEN }}" >> "${GITHUB_OUTPUT}"
+              echo "grafana_url=grafana.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
+              ;;
+            *)
+              echo "Unknown cluster"
+              exit 1
+          esac
+
+      - run: |
+          echo "${{ steps.details.outputs.argocd_url }}"
+          echo "${{ steps.details.outputs.argocd_token }}"
+          echo "${{ steps.details.outputs.grafana_url }}"
