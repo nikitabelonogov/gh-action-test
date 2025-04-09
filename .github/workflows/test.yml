@@ -26,17 +26,17 @@ jobs:
           case "${{ inputs.cluster }}" in
             'dev.heartex.com')
               echo "argocd_url=argocd.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
-              echo "argocd_token=${{ secrets.ARGOCD_DEV_TOKEN }}" >> "${GITHUB_OUTPUT}"
+              echo "argocd_token_secret_name=ARGOCD_DEV_TOKEN" >> "${GITHUB_OUTPUT}"
               echo "grafana_url=grafana.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
               ;;
             'app.heartex.com')
               echo "argocd_url=argocd.humansignal.com" >> "${GITHUB_OUTPUT}"
-              echo "argocd_token=${{ secrets.ARGOCD_US_PROD_TOKEN }}" >> "${GITHUB_OUTPUT}"
+              echo "argocd_token_secret_name=secrets.ARGOCD_US_PROD_TOKEN" >> "${GITHUB_OUTPUT}"
               echo "grafana_url=grafana.humansignal.com" >> "${GITHUB_OUTPUT}"
               ;;
             'app.humansignal.eu')
               echo "argocd_url=argocd.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
-              echo "argocd_token=${{ secrets.ARGOCD_EU_PROD_TOKEN }}" >> "${GITHUB_OUTPUT}"
+              echo "argocd_token_secret_name=ARGOCD_EU_PROD_TOKEN" >> "${GITHUB_OUTPUT}"
               echo "grafana_url=grafana.appx.humansignal.com" >> "${GITHUB_OUTPUT}"
               ;;
             *)
@@ -46,5 +46,6 @@ jobs:
 
       - run: |
           echo "${{ steps.details.outputs.argocd_url }}"
-          echo "${{ steps.details.outputs.argocd_token }}"
           echo "${{ steps.details.outputs.grafana_url }}"
+          echo "${{ steps.details.outputs.argocd_token_secret_name }}"
+          echo "${{ secrets[steps.details.outputs.argocd_token_secret_name] }}"
