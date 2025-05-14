@@ -35,13 +35,14 @@ jobs:
       - name: Pull develop and fb-test branches
         env:
           HEAD_BRANCH: "${{ github.ref_name }}"
+          BASE_BRANCH: "develop"
         run: |
           echo "==> Show all branches"
           git branch -a
           
           echo "==> Fetching develop"
-          git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.behind }} --progress origin develop
-          git checkout --force -B develop origin/develop
+          git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.behind }} origin "${BASE_BRANCH}"
+          git checkout --force -B "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
 
           echo "==> Fetching ${HEAD_BRANCH} (full history)"
           git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.ahead }} origin "${HEAD_BRANCH}"
@@ -50,7 +51,7 @@ jobs:
           echo "==> Final branch list"
           git branch -a
 
-      - name: Log develop
+      - name: Log base branch
         shell: bash
         continue-on-error: true
         run: git log --oneline develop
