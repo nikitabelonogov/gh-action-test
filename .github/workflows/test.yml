@@ -13,6 +13,25 @@ jobs:
       - name: Checkout Actions Hub
         uses: actions/checkout@v4
 
+      - name: get merge base
+        uses: actions/github-script@v7
+        id: get-merge-base
+        env:
+          HEAD_BRANCH: "${{ github.ref_name }}"
+          BASE_BRANCH: "develop"
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            const {data: compare} = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: process.env.BASE_BRANCH,
+              head: process.env.HEAD_BRANCH,
+            });
+            core.SetOutput('merge_base', compare.merge_base_commit.sha);
+            core.SetOutput('behind', compare.behind_by);
+            core.SetOutput('ahead', compare.ahead_by);
+
       - name: Pull develop and fb-test branches
         env:
           HEAD_BRANCH: "${{ github.ref_name }}"
@@ -21,11 +40,11 @@ jobs:
           git branch -a
           
           echo "==> Fetching develop"
-          git fetch --no-tags --no-recurse-submodules --progress origin develop
+          git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.behind }} --progress origin develop
           git checkout --force -B develop origin/develop
 
           echo "==> Fetching ${HEAD_BRANCH} (full history)"
-          git fetch --no-tags --no-recurse-submodules --depth=2147483647 origin "${HEAD_BRANCH}"
+          git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.ahead }} origin "${HEAD_BRANCH}"
           git checkout --force -B "${HEAD_BRANCH}" "origin/${HEAD_BRANCH}"
 
           echo "==> Final branch list"
