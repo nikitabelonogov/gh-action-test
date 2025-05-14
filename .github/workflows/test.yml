@@ -29,8 +29,8 @@ jobs:
               head: process.env.HEAD_BRANCH,
             });
             core.setOutput('merge_base', compare.merge_base_commit.sha);
-            core.setOutput('behind', compare.behind_by);
-            core.setOutput('ahead', compare.ahead_by);
+            core.setOutput('behind', 5 + compare.behind_by);
+            core.setOutput('ahead', 5 + compare.ahead_by);
 
       - name: Pull develop and fb-test branches
         env:
