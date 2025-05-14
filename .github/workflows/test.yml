@@ -42,7 +42,7 @@ jobs:
           
           echo "==> Fetching develop"
           git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.behind }} origin "${BASE_BRANCH}"
-          git checkout --force -B "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
+          git branch --force "${BASE_BRANCH}" "origin/${BASE_BRANCH}"
 
           echo "==> Fetching ${HEAD_BRANCH} (full history)"
           git fetch --no-tags --no-recurse-submodules --depth=${{ steps.get-merge-base.outputs.ahead }} origin "${HEAD_BRANCH}"
