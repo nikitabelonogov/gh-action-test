@@ -32,10 +32,10 @@ jobs:
           echo "==> branches"
           git branch -a
 
-      - name: Log branches
+      - name: merge base
         shell: bash
         continue-on-error: true
-        run: git branch -a
+        run: git merge-base fb-test develop
 
       - name: Log develop
         shell: bash
