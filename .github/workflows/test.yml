@@ -15,8 +15,8 @@ jobs:
 
       - name: Pull develop and fb-test branches
         run: |
-          git pull origin develop
-          git fetch origin fb-test
+          git fetch origin develop
+          git pull origin fb-test
 
       - name: Log branches
         shell: bash
