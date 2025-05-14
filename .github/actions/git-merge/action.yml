@@ -5,23 +5,20 @@ inputs:
   base_branch:
     description: base branch ref
     required: true
-  head_branch:
-    description: head branch ref
-    required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Fetch pull head branch
+      shell: bash
+      env:
+        BRANCH: "${{ inputs.head_branch }}"
+      run: git pull origin
+
     - name: Fetch full base branch
       shell: bash
       env:
         BRANCH: "${{ inputs.base_branch }}"
-      run: git fetch origin "${BRANCH}:${BRANCH}" --no-tags
-
-    - name: Fetch full head branch
-      shell: bash
-      env:
-        BRANCH: "${{ inputs.head_branch }}"
       run: git fetch origin "${BRANCH}:${BRANCH}" --no-tags
 
     - name: Log branches
