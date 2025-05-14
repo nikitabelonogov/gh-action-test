@@ -16,10 +16,10 @@ runs:
       shell: bash
       env:
         BRANCH: "${{ inputs.base_branch }}"
-      run: git fetch origin "${BRANCH}:refs/remotes/origin/${BRANCH}" --unshallow
+      run: git fetch origin "${BRANCH}:refs/remotes/origin/${BRANCH}"
 
     - name: Fetch full head branch
       shell: bash
       env:
         BRANCH: "${{ inputs.head_branch }}"
-      run: git fetch origin "${BRANCH}:refs/remotes/origin/${BRANCH}" --unshallow
+      run: git fetch origin "${BRANCH}:refs/remotes/origin/${BRANCH}"

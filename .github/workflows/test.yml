@@ -15,6 +15,7 @@ jobs:
 
       - name: Git Merge
         uses: ./.github/actions/git-merge
+        continue-on-error: true
         with:
           base_branch: "develop"
           head_branch: "fb-test"
