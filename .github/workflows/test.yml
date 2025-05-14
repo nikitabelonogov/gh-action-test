@@ -20,8 +20,14 @@ jobs:
           base_branch: "develop"
           head_branch: "fb-test"
 
-      - name: Log
-        run: |
-          git log --oneline -n 5 develop
-          git log --oneline -n 5 fb-test
-          git branch -a
+      - name: Log branches
+        continue-on-error: true
+        run: git branch -a
+
+      - name: Log develop
+        continue-on-error: true
+        run: git log --oneline develop
+
+      - name: Log fb-test
+        continue-on-error: true
+        run: git log --oneline fb-test
