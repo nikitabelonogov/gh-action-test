@@ -20,7 +20,7 @@ jobs:
           HEAD_BRANCH: "${{ github.ref_name }}"
           BASE_BRANCH: "develop"
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          github-token: "${{ github.token }}"
           script: |
             const {data: compare} = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
@@ -28,9 +28,9 @@ jobs:
               base: process.env.BASE_BRANCH,
               head: process.env.HEAD_BRANCH,
             });
-            core.SetOutput('merge_base', compare.merge_base_commit.sha);
-            core.SetOutput('behind', compare.behind_by);
-            core.SetOutput('ahead', compare.ahead_by);
+            core.setOutput('merge_base', compare.merge_base_commit.sha);
+            core.setOutput('behind', compare.behind_by);
+            core.setOutput('ahead', compare.ahead_by);
 
       - name: Pull develop and fb-test branches
         env:
