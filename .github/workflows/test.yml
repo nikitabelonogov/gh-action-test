@@ -15,10 +15,10 @@ jobs:
 
       - name: Pull develop and fb-test branches
         run: |
-          git fetch origin develop
-          git fetch --unshallow origin fb-test
-          git checkout fb-test
-          git pull origin fb-test
+          git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin develop:refs/remotes/origin/fb-test
+          git checkout --progress --force -B develop refs/remotes/origin/develop
+          git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin fb-test:refs/remotes/origin/fb-test
+          git checkout --progress --force -B fb-test refs/remotes/origin/fb-test
 
       - name: Log branches
         shell: bash
