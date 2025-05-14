@@ -17,10 +17,10 @@ jobs:
         uses: ./.github/actions/git-merge
         with:
           base_branch: "develop"
-          head_branch: "branch"
+          head_branch: "fb-test"
 
       - name: Log
         run: |
           git log --oneline -n 5 develop
-          git log --oneline -n 5 branch
+          git log --oneline -n 5 fb-test
           git branch -a
