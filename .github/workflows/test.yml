@@ -24,17 +24,12 @@ jobs:
           git fetch --no-tags --no-recurse-submodules --progress origin develop
           git checkout --force -B develop origin/develop
 
-          echo "==> Fetching ${HEAD_BRANCH}"
-          git fetch --no-tags --no-recurse-submodules --progress origin "${HEAD_BRANCH}"
+          echo "==> Fetching ${HEAD_BRANCH} (full history)"
+          git fetch --no-tags --no-recurse-submodules --depth=2147483647 origin "${HEAD_BRANCH}"
           git checkout --force -B "${HEAD_BRANCH}" "origin/${HEAD_BRANCH}"
 
           echo "==> Final branch list"
           git branch -a
-
-      - name: merge base
-        shell: bash
-        continue-on-error: true
-        run: git merge-base fb-test develop
 
       - name: Log develop
         shell: bash
@@ -45,6 +40,10 @@ jobs:
         shell: bash
         continue-on-error: true
         run: git log --oneline "${{ github.ref_name }}"
+
+      - name: merge base
+        shell: bash
+        run: git merge-base fb-test develop
 
 #      - name: Git Merge
 #        uses: ./.github/actions/git-merge
