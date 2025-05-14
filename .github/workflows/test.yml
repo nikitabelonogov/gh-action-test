@@ -19,14 +19,14 @@ jobs:
           git branch -a
           
           echo "==> develop"
-          git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin develop:refs/remotes/origin/develop
+          git -c protocol.version=2 fetch --no-tags --no-recurse-submodules origin develop:refs/remotes/origin/develop
           git checkout --progress --force -B develop refs/remotes/origin/develop
 
           echo "==> branches"
           git branch -a
           
           echo "==> fb-test"
-          git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin fb-test:refs/remotes/origin/fb-test
+          git -c protocol.version=2 fetch --no-tags --no-recurse-submodules origin fb-test:refs/remotes/origin/fb-test
           git checkout --progress --force -B fb-test refs/remotes/origin/fb-test
           
           echo "==> branches"
