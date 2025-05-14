@@ -16,13 +16,13 @@ runs:
       shell: bash
       env:
         BRANCH: "${{ inputs.base_branch }}"
-      run: git fetch origin "${BRANCH}:origin/${BRANCH}" --no-tags
+      run: git fetch origin "${BRANCH}:${BRANCH}" --no-tags
 
     - name: Fetch full head branch
       shell: bash
       env:
         BRANCH: "${{ inputs.head_branch }}"
-      run: git fetch origin "${BRANCH}:origin/${BRANCH}" --no-tags
+      run: git fetch origin "${BRANCH}:${BRANCH}" --no-tags
 
     - name: Log branches
       shell: bash
@@ -32,9 +32,9 @@ runs:
     - name: Log develop
       shell: bash
       continue-on-error: true
-      run: git log --oneline origin/develop
+      run: git log --oneline develop
 
     - name: Log fb-test
       shell: bash
       continue-on-error: true
-      run: git log --oneline origin/fb-test
+      run: git log --oneline fb-test

@@ -13,9 +13,29 @@ jobs:
       - name: Checkout Actions Hub
         uses: actions/checkout@v4
 
-      - name: Git Merge
-        uses: ./.github/actions/git-merge
+      - name: Pull develop and fb-test branches
+        run: |
+          git fetch origin develop:develop
+          git fetch origin fb-test:fb-test
+
+      - name: Log branches
+        shell: bash
         continue-on-error: true
-        with:
-          base_branch: "develop"
-          head_branch: "fb-test"
+        run: git branch -a
+
+      - name: Log develop
+        shell: bash
+        continue-on-error: true
+        run: git log --oneline develop
+
+      - name: Log fb-test
+        shell: bash
+        continue-on-error: true
+        run: git log --oneline fb-test
+
+#      - name: Git Merge
+#        uses: ./.github/actions/git-merge
+#        continue-on-error: true
+#        with:
+#          base_branch: "develop"
+#          head_branch: "fb-test"
