@@ -10,8 +10,21 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Fail
-        run: exit 1
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          ref: "fb-test"
 
-      - name: Check
-        run: echo ${{ workflow.run_status }}
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
+
+      - name: Git Merge
+        uses: ./.github/actions-hub/actions/git-merge
+        with:
+          base_branch: "develop"
+          head_branch: "fb-test"
