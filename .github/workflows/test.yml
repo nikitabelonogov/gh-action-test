@@ -13,7 +13,7 @@ jobs:
       - name: "validate"
         id: validate
         continue-on-error: true
-        run: exit 1
+        run: exit 0
 
       - name: "check"
         id: check
