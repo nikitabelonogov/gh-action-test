@@ -62,15 +62,12 @@ jobs:
         env:
           MENTION: "<@${{ steps.team_details.outputs.slack-user-id }}>"
           CHANGELOG: "${{ steps.changelog.outputs.slack_notification }}"
-          RELEASE: "<https://github.com/${{ github.repository }}/releases/tag/${{ needs.release_pipeline.outputs.tag }}|${{ needs.release_pipeline.outputs.tag }}>"
-          JIRA: "<${{ needs.release_pipeline.outputs.jira_releases_issues_jql_url }}|jira issues>"
+          RELEASE: "<https://github.com/${{ github.repository }}/releases/tag/2.26.0.dev22|2.26.0.dev22>"
+          JIRA: "<${{ steps.changelog.outputs.jira_releases_issues_jql_url }}|jira issues>"
           WORKFLOW: "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow>"
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_LSE_BOT_TOKEN }}
           payload: |
             channel: "C05KTGCDXEU"
-            text: >
-              ${{ github.event_name == 'schedule' && '*Scheduled* ' || '' }}SaaS Release *<https://github.com/${{ github.repository }}/releases/tag/${{ steps.create-release.outputs.tag }}|${{ steps.create-release.outputs.tag }}>* is out! ${{ env.MENTION }}
-              ${{ env.CHANGELOG }}\n\n
-              [ ${{ env.RELEASE }} ${{ env.JIRA }} ${{ env.WORKFLOW }} ]
+            text: "${{ github.event_name == 'schedule' && '*Scheduled* ' || '' }}SaaS Release *<https://github.com/${{ github.repository }}/releases/tag/${{ steps.create-release.outputs.tag }}|${{ steps.create-release.outputs.tag }}>* is out! ${{ env.MENTION }}\n${{ env.CHANGELOG }}\n[ ${{ env.RELEASE }} ${{ env.JIRA }} ${{ env.WORKFLOW }} ]"
