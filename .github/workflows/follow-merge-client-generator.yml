@@ -30,6 +30,8 @@ env:
   POETRY_VERSION: 2.1.4
   DYFF_VERSION: 1.7.0
   CG_PATH: ./label-studio-client-generator
+  OPEN_AI_YAML_PATH: fern/openapi/openapi.yaml
+  NEW_OPEN_AI_YAML_PATH: open_ai.new.yaml
 
 jobs:
   spectacular:
@@ -82,21 +84,30 @@ jobs:
           curl -L "https://github.com/homeport/dyff/releases/download/v${DYFF_VERSION}/dyff_${DYFF_VERSION}_linux_amd64.tar.gz" | tar -xz
           mv dyff ~/.local/bin/dyff
 
-      - name: Checkout client generator
-        uses: actions/checkout@v4
-        with:
-          repository: "HumanSignal/label-studio-client-generator"
-          path: ${{ env.CG_PATH }}
-          token: ${{ secrets.GIT_PAT }}
-          ref: master # TODO: change to ${{ inputs.branch_name || github.event.pull_request.head.sha }}
+
+      - name: Download Original OpenAI YAML
+        id: download-original-openai-yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_PAT }}
+          BRANCH_NAME: ${{ inputs.branch_name || github.event.pull_request.head.ref }}
+          DEFAULT_BRANCH: master
+        run: |
+          set -euo pipefail
+          # Check if the branch exists in the remote repository 
+          if ! git ls-remote --exit-code --heads https://github.com/HumanSignal/label-studio-client-generator.git "${BRANCH_NAME}" > /dev/null; then
+            echo "::notice::Branch '${BRANCH_NAME}' does not exist in label-studio-client-generator, using default branch '${DEFAULT_BRANCH}'"
+            BRANCH_NAME="${DEFAULT_BRANCH}"
+            echo "::set-output name=branch_name::${BRANCH_NAME}"
+          fi
+          curl -H "Authorization: token ${GITHUB_TOKEN}" -L "https://raw.githubusercontent.com/HumanSignal/label-studio-client-generator/${BRANCH_NAME}/${OPEN_AI_YAML_PATH}" -o "${OPEN_AI_YAML_PATH}"
 
       - name: Run Spectacular
+        id: spectacular
         shell: bash
         env:
           DJANGO_SETTINGS_MODULE: htx.settings.label_studio
-          NEW_OPEN_AI_YAML_PATH: open_ai.new.yaml
         run: |
-          set -xeuo pipefail
+          set -euo pipefail
 
           echo "::group::Run Spectacular"
           poetry run python label_studio_enterprise/manage.py spectacular > "${NEW_OPEN_AI_YAML_PATH}"
@@ -108,15 +119,40 @@ jobs:
             exit 1
           fi
 
-          open_ai_dyff=$(dyff between "${CG_PATH}/fern/openapi/openapi.yaml" "${NEW_OPEN_AI_YAML_PATH}")
+          open_ai_dyff=$(dyff between "${CG_PATH}/${OPEN_AI_YAML_PATH}" "${NEW_OPEN_AI_YAML_PATH}")
           echo "::group::OpenAI Dyff"
           echo "$open_ai_dyff"
           echo "::endgroup::"
 
-          if [ -z "$open_ai_dyff" ]; then
-            echo "::info::OpenAI Dyff is empty"
-            exit 0
-          else
+          if [ -n "$open_ai_dyff" ]; then
             echo "::error::OpenAI Dyff is not empty"
-            exit 1
+            echo "::set-output name=changed::true"
           fi
+
+      - name: Checkout client generator
+        if: steps.spectacular.outputs.changed == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: "HumanSignal/label-studio-client-generator"
+          path: ${{ env.CG_PATH }}
+          token: ${{ secrets.GIT_PAT }}
+          ref: ${{ steps.download-original-openai-yaml.outputs.branch_name }}
+
+      - name: Create branch
+        if: steps.download-original-openai-yaml.outputs.branch_name == 'master'
+        working-directory: ${{ env.CG_PATH }}
+        env:
+          BRANCH_NAME: "${{ inputs.branch_name || github.event.pull_request.head.ref }}"
+        run: git checkout -b "${BRANCH_NAME}"
+
+      - name: Update OpenAI YAML
+        if: steps.spectacular.outputs.changed == 'true'
+        run: cp "${NEW_OPEN_AI_YAML_PATH}" "${CG_PATH}/${OPEN_AI_YAML_PATH}"
+
+      - name: Commit and push OpenAI YAML
+        if: steps.spectacular.outputs.changed == 'true'
+        working-directory: ${{ env.CG_PATH }}
+        run: |
+          git add "${OPEN_AI_YAML_PATH}"
+          git commit -m "Update OpenAI YAML"
+          git push origin "${BRANCH_NAME}"
