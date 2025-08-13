@@ -165,9 +165,9 @@ jobs:
       - name: Commit and push OpenAI YAML
         if: steps.spectacular.outputs.changed == 'true'
         working-directory: ${{ env.CG_PATH }}
+        env:
+          BRANCH_NAME: "${{ inputs.branch_name || github.event.pull_request.head.ref }}"
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
           git add "${OPEN_AI_YAML_PATH}"
           git commit -m "Update OpenAI YAML"
           git push origin "${BRANCH_NAME}"
