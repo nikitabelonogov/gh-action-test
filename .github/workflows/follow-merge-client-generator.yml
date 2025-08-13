@@ -85,10 +85,10 @@ jobs:
       - name: Checkout client generator
         uses: actions/checkout@v4
         with:
-          repository: "Humansignal/label-studio-client-generator"
+          repository: "HumanSignal/label-studio-client-generator"
           path: ${{ env.CG_PATH }}
           token: ${{ secrets.GIT_PAT }}
-          ref: ${{ inputs.branch_name || github.event.pull_request.head.sha }}
+          ref: master # TODO: change to ${{ inputs.branch_name || github.event.pull_request.head.sha }}
 
       - name: Run Spectacular
         shell: bash
