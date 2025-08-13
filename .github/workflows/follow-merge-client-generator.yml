@@ -98,9 +98,6 @@ jobs:
           set -xeuo pipefail
 
           new_open_ai_yaml=$(poetry run python label_studio_enterprise/manage.py spectacular)
-          echo "::group::New OpenAI YAML"
-          echo "$new_open_ai_yaml"
-          echo "::endgroup::"
 
           if [ -z "$new_open_ai_yaml" ]; then
             echo "::error::Generated OpenAI YAML is empty"
