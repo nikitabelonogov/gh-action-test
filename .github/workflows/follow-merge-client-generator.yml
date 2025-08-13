@@ -31,7 +31,8 @@ env:
   DYFF_VERSION: 1.7.0
   CG_PATH: ./label-studio-client-generator
   OPEN_AI_YAML_PATH: fern/openapi/openapi.yaml
-  NEW_OPEN_AI_YAML_PATH: open_ai.new.yaml
+  NEW_OPEN_AI_YAML_PATH: openai.new.yaml
+  OLD_OPEN_AI_YAML_PATH: openai.old.yaml
 
 jobs:
   spectacular:
@@ -99,7 +100,7 @@ jobs:
             BRANCH_NAME="${DEFAULT_BRANCH}"
             echo "::set-output name=branch_name::${BRANCH_NAME}"
           fi
-          curl -H "Authorization: token ${GITHUB_TOKEN}" -L "https://raw.githubusercontent.com/HumanSignal/label-studio-client-generator/${BRANCH_NAME}/${OPEN_AI_YAML_PATH}" -o "${OPEN_AI_YAML_PATH}"
+          curl -H "Authorization: token ${GITHUB_TOKEN}" -L "https://raw.githubusercontent.com/HumanSignal/label-studio-client-generator/${BRANCH_NAME}/${OPEN_AI_YAML_PATH}" -o "${OLD_OPEN_AI_YAML_PATH}"
 
       - name: Run Spectacular
         id: spectacular
@@ -119,7 +120,7 @@ jobs:
             exit 1
           fi
 
-          open_ai_dyff=$(dyff between "${CG_PATH}/${OPEN_AI_YAML_PATH}" "${NEW_OPEN_AI_YAML_PATH}")
+          open_ai_dyff=$(dyff between "${OLD_OPEN_AI_YAML_PATH}" "${NEW_OPEN_AI_YAML_PATH}")
           echo "::group::OpenAI Dyff"
           echo "$open_ai_dyff"
           echo "::endgroup::"
