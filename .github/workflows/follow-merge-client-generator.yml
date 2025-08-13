@@ -29,8 +29,7 @@ concurrency:
 env:
   POETRY_VERSION: 2.1.4
   DYFF_VERSION: 1.7.0
-  LSE_PATH: ./label-studio-enterprise
-  CG_PATH: ./client-generator
+  CG_PATH: ./label-studio-client-generator
 
 jobs:
   spectacular:
@@ -42,7 +41,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          path: ${{ env.LSE_PATH }}
+          repository: "Humansignal/label-studio-enterprise"
           token: ${{ secrets.GIT_PAT }}
           ref: ${{ inputs.branch_name || github.event.pull_request.head.sha }}
 
@@ -83,6 +82,14 @@ jobs:
           curl -L "https://github.com/homeport/dyff/releases/download/v${DYFF_VERSION}/dyff_${DYFF_VERSION}_linux_amd64.tar.gz" | tar -xz
           mv dyff ~/.local/bin/dyff
 
+      - name: Checkout client generator
+        uses: actions/checkout@v4
+        with:
+          repository: "Humansignal/label-studio-client-generator"
+          path: ${{ env.CG_PATH }}
+          token: ${{ secrets.GIT_PAT }}
+          ref: ${{ inputs.branch_name || github.event.pull_request.head.sha }}
+
       - name: Run Spectacular
         shell: bash
         env:
@@ -100,7 +107,7 @@ jobs:
             exit 1
           fi
 
-          open_ai_dyff=$(dyff between openapi/label_studio_enterprise.yaml <(echo "$new_open_ai_yaml"))
+          open_ai_dyff=$(dyff between "${CG_PATH}/fern/openapi/openapi.yaml" <(echo "$new_open_ai_yaml"))
           echo "::group::OpenAI Dyff"
           echo "$open_ai_dyff"
           echo "::endgroup::"
