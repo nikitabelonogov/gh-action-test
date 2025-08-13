@@ -1,0 +1,114 @@
+name: 'Follow Merge: Client Generator'
+
+on:
+  workflow_call:
+    inputs:
+      branch_name:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Branch name'
+        required: true
+        type: string
+  # pull_request_target:
+  #   types:
+  #     - opened
+  #     - reopened
+  #     - synchronize
+  #     - ready_for_review
+  #   branches:
+  #     - develop
+  #     - 'lse-release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.branch_name }}
+  cancel-in-progress: true
+
+env:
+  POETRY_VERSION: 2.1.4
+  DYFF_VERSION: 1.7.0
+  LSE_PATH: ./label-studio-enterprise
+  CG_PATH: ./client-generator
+
+jobs:
+  spectacular:
+    name: Spectacular
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.LSE_PATH }}
+          token: ${{ secrets.GIT_PAT }}
+          ref: ${{ inputs.branch_name || github.event.pull_request.head.sha }}
+
+      - name: "Install poetry"
+        run: pipx install "poetry==${{ env.POETRY_VERSION }}"
+
+      - name: "Set up Python"
+        id: setup_python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'poetry'
+
+      - name: "Install OS dependencies"
+        run: |
+          sudo apt update
+          sudo apt install --no-install-recommends --no-install-suggests -y \
+            build-essential python3-dev python3-psutil \
+            libffi8 libldap-dev libldap2 libsasl2-dev libssl-dev libgeos-c1v5
+  
+      - name: Run poetry
+        working-directory: ${{ env.LSE_PATH }}
+        env:
+          POETRY_CACHE_DIR: ~/.cache/pypoetry
+        run: poetry install
+
+      - name: Cache dyff binary
+        id: cache-dyff
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/dyff
+          key: dyff-${{ runner.os }}-${{ env.DYFF_VERSION }}
+
+      - name: Install dyff if not cached
+        if: steps.cache-dyff.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -L "https://github.com/homeport/dyff/releases/download/v${DYFF_VERSION}/dyff_${DYFF_VERSION}_linux_amd64.tar.gz" | tar -xz
+          mv dyff ~/.local/bin/dyff
+
+      - name: Run Spectacular
+        shell: bash
+        env:
+          DJANGO_SETTINGS_MODULE: htx.settings.label_studio
+        run: |
+          set -xeuo pipefail
+
+          new_open_ai_yaml=$(poetry run python label_studio_enterprise/manage.py spectacular)
+          echo "::group::New OpenAI YAML"
+          echo "$new_open_ai_yaml"
+          echo "::endgroup::"
+
+          if [ -z "$new_open_ai_yaml" ]; then
+            echo "::error::Generated OpenAI YAML is empty"
+            exit 1
+          fi
+
+          open_ai_dyff=$(dyff between openapi/label_studio_enterprise.yaml <(echo "$new_open_ai_yaml"))
+          echo "::group::OpenAI Dyff"
+          echo "$open_ai_dyff"
+          echo "::endgroup::"
+
+          if [ -z "$open_ai_dyff" ]; then
+            echo "::info::OpenAI Dyff is empty"
+            exit 0
+          else
+            echo "::error::OpenAI Dyff is not empty"
+            exit 1
+          fi
