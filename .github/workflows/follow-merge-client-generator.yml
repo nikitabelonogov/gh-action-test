@@ -94,17 +94,21 @@ jobs:
         shell: bash
         env:
           DJANGO_SETTINGS_MODULE: htx.settings.label_studio
+          NEW_OPEN_AI_YAML_PATH: open_ai.new.yaml
         run: |
           set -xeuo pipefail
 
-          new_open_ai_yaml=$(poetry run python label_studio_enterprise/manage.py spectacular)
+          echo "::group::Run Spectacular"
+          poetry run python label_studio_enterprise/manage.py spectacular > "${NEW_OPEN_AI_YAML_PATH}"
+          echo "::endgroup::"
 
-          if [ -z "$new_open_ai_yaml" ]; then
+          echo "::group::Check if OpenAI YAML is empty"
+          if [ -z "$(cat "${NEW_OPEN_AI_YAML_PATH}")" ]; then
             echo "::error::Generated OpenAI YAML is empty"
             exit 1
           fi
 
-          open_ai_dyff=$(dyff between "${CG_PATH}/fern/openapi/openapi.yaml" <(echo "$new_open_ai_yaml"))
+          open_ai_dyff=$(dyff between "${CG_PATH}/fern/openapi/openapi.yaml" "${NEW_OPEN_AI_YAML_PATH}")
           echo "::group::OpenAI Dyff"
           echo "$open_ai_dyff"
           echo "::endgroup::"
