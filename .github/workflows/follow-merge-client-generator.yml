@@ -47,6 +47,18 @@ jobs:
           repository: "Humansignal/label-studio-enterprise"
           token: ${{ secrets.GIT_PAT }}
           ref: ${{ inputs.branch_name || github.event.pull_request.head.sha }}
+      
+      - name: Checkout Actions Hub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
+
+      - name: Git Configure
+        uses: ./.github/actions-hub/actions/git-configure
+        with:
+          username: ${{ env.AUTHOR_NAME }}
 
       - name: "Install poetry"
         run: pipx install "poetry==${{ env.POETRY_VERSION }}"
@@ -154,6 +166,8 @@ jobs:
         if: steps.spectacular.outputs.changed == 'true'
         working-directory: ${{ env.CG_PATH }}
         run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
           git add "${OPEN_AI_YAML_PATH}"
           git commit -m "Update OpenAI YAML"
           git push origin "${BRANCH_NAME}"
