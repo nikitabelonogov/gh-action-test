@@ -110,8 +110,8 @@ jobs:
           if ! git ls-remote --exit-code --heads https://github.com/HumanSignal/label-studio-client-generator.git "${BRANCH_NAME}" > /dev/null; then
             echo "::notice::Branch '${BRANCH_NAME}' does not exist in label-studio-client-generator, using default branch '${DEFAULT_BRANCH}'"
             BRANCH_NAME="${DEFAULT_BRANCH}"
-            echo "::set-output name=branch_name::${BRANCH_NAME}"
           fi
+          echo "::set-output name=branch_name::${BRANCH_NAME}"
           curl -H "Authorization: token ${GITHUB_TOKEN}" -L "https://raw.githubusercontent.com/HumanSignal/label-studio-client-generator/${BRANCH_NAME}/${OPEN_AI_YAML_PATH}" -o "${OLD_OPEN_AI_YAML_PATH}"
 
       - name: Run Spectacular
