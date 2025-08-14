@@ -171,3 +171,14 @@ jobs:
           git add "${OPEN_AI_YAML_PATH}"
           git commit -m "Update OpenAI YAML"
           git push origin "${BRANCH_NAME}"
+
+      - name: Find or Create PR
+        uses: ./.github/actions-hub/actions/follow-merge-find-or-create-pull-request
+        id: get-pr
+        with:
+          github_token: ${{ secrets.GIT_PAT }}
+          repository: "HumanSignal/label-studio-client-generator"
+          branch_name: "${{ inputs.branch_name || github.event.pull_request.head.ref }}"
+          base_branch_name: "master"
+          title: "${{ github.event.pull_request.title || 'Update OpenAI YAML' }}"
+          create: 'true'
