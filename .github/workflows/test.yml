@@ -30,4 +30,4 @@ jobs:
       - docker_build
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ needs.docker_build.outputs.digest }}"
+      - run: echo "${{ needs.docker_build.outputs }}"
