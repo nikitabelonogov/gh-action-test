@@ -1,0 +1,32 @@
+name: 'TEST'
+
+on:
+  push:
+
+jobs:
+  docker_build:
+    name: "Docker image (${{ matrix.platform }})"
+    timeout-minutes: 90
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    outputs:
+      digest: "${{ steps.build.outputs.digest }}"
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+      - id: build
+        run: echo "digest=${{ matrix.platform }}" >> "${GITHUB_OUTPUT}"
+
+  check:
+    name: Check
+    needs:
+      - docker_build
+    steps:
+      - uses: hmarr/debug-action@v3.0.0
+      - run: echo "${{ needs.docker_build.outputs.digest }}"
