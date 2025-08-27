@@ -30,4 +30,4 @@ jobs:
       - docker_build
     steps:
       - uses: hmarr/debug-action@v3.0.0
-      - run: echo "${{ toJson(needs.docker_build.outputs) }}"
+      - run: echo "${{ toJson(needs.docker_build) }}"
