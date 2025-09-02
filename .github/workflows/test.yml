@@ -13,6 +13,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: "tetsorg/testimg"
+          tags: "type=sha"
+
       - name: debug
         run: |
           echo "${{ steps.meta.outputs.version }}"
