@@ -13,7 +13,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: "tetsorg/testimg"
-          tags: "type=sha"
+          tags: "type=raw,value={{date 'YYYYMMDDhhmmss'}}-{{branch}}-{{sha}}"
 
       - name: debug
         run: |
