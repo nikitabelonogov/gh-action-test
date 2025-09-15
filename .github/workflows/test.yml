@@ -5,20 +5,23 @@ on:
 
 jobs:
   build_wheels:
-    name: "Build musl wheels and upload to Nexus"
-    runs-on: ubuntu-latest
+    name: "Build musl wheels and upload to Nexus (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, ubuntu-24.04-arm ]
+    container:
+      image: python:3.13-alpine
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
       - name: Build and upload wheels in Docker
         run: |
-          docker run --rm python:3.13-alpine sh -c "
-            apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev &&
-            python -m pip wheel scikit-learn==1.7.2 -w dist/ &&
-            ls dist/ &&
-            python -m pip install -U twine &&
-            export NEXUS_URL='https://nexus.appx.humansignal.com/repository/alpine/' &&
-            export TWINE_USERNAME='admin' &&
-            export TWINE_PASSWORD='admin' &&
-            python -m twine upload --skip-existing --repository-url \"\$NEXUS_URL\" dist/*.whl
-          "
+          apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev &&
+          python -m pip wheel scikit-learn==1.7.2 -w dist/ &&
+          ls dist/ &&
+          python -m pip install -U twine &&
+          export NEXUS_URL='https://nexus.appx.humansignal.com/repository/alpine/' &&
+          export TWINE_USERNAME='admin' &&
+          export TWINE_PASSWORD='admin' &&
+          python -m twine upload --repository-url \"\$NEXUS_URL\" dist/*.whl
