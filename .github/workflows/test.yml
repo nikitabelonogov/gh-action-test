@@ -4,23 +4,19 @@ on:
   push:
 
 jobs:
-  docker_build:
-    name: "Docker build"
+  build_wheels:
+    name: "Build musl wheels and upload to Nexus"
     runs-on: ubuntu-latest
     steps:
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: "tetsorg/testimg"
-          tags: |
-            type=ref,event=branch
-            type=raw,value={{date 'YYYYMMDDhhmmss'}}-{{branch}}-{{sha}}
+      - uses: hmarr/debug-action@v3.0.0
 
-      - name: debug
+      - shell: docker run --rm -i python:3.13-alpine sh -c
         run: |
-          echo "${{ steps.meta.outputs.version }}"
-          echo "${{ steps.meta.outputs.tags }}"
-          echo "${{ steps.meta.outputs.labels }}"
-          echo "${{ steps.meta.outputs.annotations }}"
-          echo "${{ steps.meta.outputs.json }}"
+          apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev
+          python -m pip wheel scikit-learn==1.7.2 -w dist/
+          ls dist/
+          python -m pip install -U twine
+          export NEXUS_URL="https://nexus.appx.humansignal.com/repository/alpine/"
+          export TWINE_USERNAME="admin"
+          export TWINE_PASSWORD="admin"
+          python -m twine upload --skip-existing --repository-url "${NEXUS_URL}" dist/*.whl
