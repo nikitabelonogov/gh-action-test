@@ -14,14 +14,6 @@ jobs:
         id: setup-buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Poetry mount
-        uses: actions/cache@v4
-        with:
-          path: /tmp/poetry-cache-alpine
-          key: poetry-cache-alpine
-
-      - run: mkdir -p /tmp/poetry-cache-alpine
-
       - name: Push Docker image
         uses: docker/build-push-action@v6.18.0
         id: docker_build_and_push
@@ -39,7 +31,5 @@ jobs:
             POETRY_VERSION=${{ env.POETRY_VERSION }}
           secrets: |
             "generate_versions_github_token=${{ secrets.GENERATE_VERSIONS_GITHUB_TOKEN }}"
-          build-contexts: |
-            type=bind,src=/tmp/poetry-cache-alpine,target=/.poetry-cache
-
-      - run: ls -la /tmp/poetry-cache-alpine
+          cache-from: type=gha,scope=poetry-cache-alpine
+          cache-to: type=gha,mode=max,scope=poetry-cache-alpine
