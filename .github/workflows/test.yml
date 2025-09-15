@@ -10,13 +10,15 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - shell: docker run --rm -i python:3.13-alpine sh -c
+      - name: Build and upload wheels in Docker
         run: |
-          apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev
-          python -m pip wheel scikit-learn==1.7.2 -w dist/
-          ls dist/
-          python -m pip install -U twine
-          export NEXUS_URL="https://nexus.appx.humansignal.com/repository/alpine/"
-          export TWINE_USERNAME="admin"
-          export TWINE_PASSWORD="admin"
-          python -m twine upload --skip-existing --repository-url "${NEXUS_URL}" dist/*.whl
+          docker run --rm python:3.13-alpine sh -c "
+            apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev &&
+            python -m pip wheel scikit-learn==1.7.2 -w dist/ &&
+            ls dist/ &&
+            python -m pip install -U twine &&
+            export NEXUS_URL='https://nexus.appx.humansignal.com/repository/alpine/' &&
+            export TWINE_USERNAME='admin' &&
+            export TWINE_PASSWORD='admin' &&
+            python -m twine upload --skip-existing --repository-url \"\$NEXUS_URL\" dist/*.whl
+          "
