@@ -1,7 +1,7 @@
 name: 'TEST'
 
 on:
-  push:
+#  push:
 
 jobs:
   build_wheels:
