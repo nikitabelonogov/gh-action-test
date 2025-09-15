@@ -14,13 +14,20 @@ jobs:
     container:
       image: python:3.13-alpine
     steps:
-      - name: Build and upload wheels in Docker
+      - name: Install Build Dependencies
         run: |
           apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev
+
+      - name: Build Wheels
+        run: |
           python -m pip wheel scikit-learn==1.7.2 -w dist/
           ls dist/
+
+      - name: Upload to Nexus
+        env:
+          NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
+          TWINE_USERNAME: admin
+          TWINE_PASSWORD: admin
+        run: |
           python -m pip install -U twine
-          export NEXUS_URL='https://nexus.appx.humansignal.com/repository/alpine/'
-          export TWINE_USERNAME='admin'
-          export TWINE_PASSWORD='admin'
-          python -m twine upload --repository-url \"\$NEXUS_URL\" dist/*.whl
+          python -m twine upload --repository-url "${NEXUS_URL}" dist/*.whl
