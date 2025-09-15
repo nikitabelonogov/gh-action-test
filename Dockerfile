@@ -17,5 +17,5 @@ RUN --mount=type=cache,target=/.poetry-cache,id=poetry-cache-alpine,sharing=lock
     if [ "$INCLUDE_DEV" = "true" ]; then \
         poetry install --no-root --with test; \
     else \
-        poetry install --no-root --without test --extras supervisord --extras cloudcli; \
+        poetry install --no-root --without test --extras supervisord --extras cloudcli -vvv; \
     fi
