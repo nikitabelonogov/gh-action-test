@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, ubuntu-24.04-arm ]
+        os: [ ubuntu-latest, ubuntu-24.04-arm, macos-latest ]
     container:
       image: python:3.13-alpine
     steps:
