@@ -49,8 +49,10 @@ jobs:
         run: echo "${{ needs.get.outputs.requirements }}" > requirements.txt
 
       - name: Build Wheels
+        env:
+          NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
         run: |
-          python -m pip wheel -r requirements.txt -w dist/
+          python -m pip wheel -r requirements.txt -w dist/ --extra-index-url "${NEXUS_URL}"
           ls dist/
 
       - name: Upload to Nexus
