@@ -7,15 +7,10 @@ env:
   POETRY_VERSION: 2.1.4
 
 jobs:
-  build_wheels:
-    name: "Build musl wheels and upload to Nexus (${{ matrix.os }})"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, ubuntu-24.04-arm ]
-    container:
-      image: python:3.13-alpine
+  get:
+    runs-on: ubuntu-latest
+    outputs:
+      requirements: ${{ steps.gen-req.outputs.requirements }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -26,13 +21,36 @@ jobs:
       - name: "Install poetry"
         run: pipx install "poetry==${{ env.POETRY_VERSION }}"
 
+      - name: Generate requirements.txt
+        id: gen-req
+        run: |
+          poetry export -f requirements.txt --without-hashes --output=requirements.txt
+          cat requirements.txt
+          echo "requirements<<EOF" >> $GITHUB_OUTPUT
+          cat requirements.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  build_wheels:
+    name: "Build musl wheels and upload to Nexus (${{ matrix.os }})"
+    needs: get
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, ubuntu-24.04-arm ]
+    container:
+      image: python:3.13-alpine
+    steps:
       - name: Install Build Dependencies
         run: |
           apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev
 
+      - name: Create requirements.txt
+        run: echo "${{ needs.get.outputs.requirements }}" > requirements.txt
+
       - name: Build Wheels
         run: |
-          python -m pip wheel scikit-learn==1.7.2 opencv-python==4.12.0.88 -w dist/
+          python -m pip wheel -r requirements.txt -w dist/
           ls dist/
 
       - name: Upload to Nexus
