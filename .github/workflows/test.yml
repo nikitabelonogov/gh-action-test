@@ -1,7 +1,10 @@
 name: 'TEST'
 
 on:
-#  push:
+  push:
+
+env:
+  POETRY_VERSION: 2.1.4
 
 jobs:
   build_wheels:
@@ -14,6 +17,15 @@ jobs:
     container:
       image: python:3.13-alpine
     steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: "Humansignal/label-studio-enterprise"
+          ref: fb-PLT-841
+          token: ${{ secrets.GIT_PAT }}
+
+      - name: "Install poetry"
+        run: pipx install "poetry==${{ env.POETRY_VERSION }}"
+
       - name: Install Build Dependencies
         run: |
           apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev
