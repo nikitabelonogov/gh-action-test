@@ -28,6 +28,7 @@ jobs:
         id: gen-req
         run: |
           poetry export -f requirements.txt --without-hashes --output=requirements.txt
+          sed -i 's/ ; .*//g' requirements.txt
           cat requirements.txt
           echo "requirements<<EOF" >> $GITHUB_OUTPUT
           cat requirements.txt >> $GITHUB_OUTPUT
@@ -55,6 +56,7 @@ jobs:
         env:
           NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
         run: |
+          cat requirements.txt
           python -m pip wheel -r requirements.txt -w dist/ --extra-index-url "${NEXUS_URL}"
           ls dist/
 
