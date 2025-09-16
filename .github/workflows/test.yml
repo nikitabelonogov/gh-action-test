@@ -24,12 +24,14 @@ jobs:
       - name: "Install poetry-plugin-export"
         run: poetry self add poetry-plugin-export
 
-      - name: Generate requirements.txt
+      - name: "Generate requirements.txt"
         id: gen-req
         run: |
           poetry export -f requirements.txt --without-hashes --output=requirements.txt
           sed -i 's/ ; .*//g' requirements.txt
+          echo "::group::requirements.txt"
           cat requirements.txt
+          echo "::endgroup::"
           echo "requirements<<EOF" >> $GITHUB_OUTPUT
           cat requirements.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -45,27 +47,28 @@ jobs:
     container:
       image: python:3.13-alpine
     steps:
-      - name: Install Build Dependencies
+      - name: "Install Build Dependencies"
+        run: apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev geos-dev openldap-dev librdkafka-dev cmake
+
+      - name: "Create requirements.txt"
         run: |
-          apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev geos-dev openldap-dev librdkafka-dev
+          echo "${{ needs.get.outputs.requirements }}" > requirements.txt
+          cat requirements.txt
 
-      - name: Create requirements.txt
-        run: echo "${{ needs.get.outputs.requirements }}" > requirements.txt
-
-      - name: Build Wheels
+      - name: "Build Wheels"
         env:
           NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
         run: |
-          cat requirements.txt
           python -m pip wheel -r requirements.txt -w dist/ --extra-index-url "${NEXUS_URL}"
           ls dist/
 
-      - name: Upload to Nexus
+      - name: "Install twine"
+        run: python -m pip install -U twine
+
+      - name: "Upload to Nexus"
         if: always()
         env:
           NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
           TWINE_USERNAME: admin
           TWINE_PASSWORD: admin
-        run: |
-          python -m pip install -U twine
-          python -m twine upload --repository-url "${NEXUS_URL}" dist/*.whl
+        run: python -m twine upload --repository-url "${NEXUS_URL}" dist/*.whl
