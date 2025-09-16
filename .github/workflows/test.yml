@@ -47,7 +47,7 @@ jobs:
     steps:
       - name: Install Build Dependencies
         run: |
-          apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev geos-dev openldap-dev
+          apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev geos-dev openldap-dev librdkafka-dev
 
       - name: Create requirements.txt
         run: echo "${{ needs.get.outputs.requirements }}" > requirements.txt
