@@ -72,4 +72,8 @@ jobs:
           NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
           TWINE_USERNAME: admin
           TWINE_PASSWORD: admin
-        run: python -m twine upload --repository-url "${NEXUS_URL}" dist/*.whl
+        run: |
+          for whl in dist/*.whl; do
+            echo "Uploading $whl"
+            python -m twine upload --repository-url "${NEXUS_URL}" "$whl" || echo "::error::Failed to upload $whl"
+          done
