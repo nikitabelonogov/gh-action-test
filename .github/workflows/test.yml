@@ -21,6 +21,9 @@ jobs:
       - name: "Install poetry"
         run: pipx install "poetry==${{ env.POETRY_VERSION }}"
 
+      - name: "Install poetry-plugin-export"
+        run: poetry self add poetry-plugin-export
+
       - name: Generate requirements.txt
         id: gen-req
         run: |
