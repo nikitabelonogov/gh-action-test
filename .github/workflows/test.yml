@@ -75,5 +75,9 @@ jobs:
         run: |
           for whl in dist/*.whl; do
             echo "Uploading $whl"
-            python -m twine upload --repository-url "${NEXUS_URL}" "$whl" || echo "::error::Failed to upload $whl"
+            if [[ ! $(basename "$whl") =~ ^label_studio.* ]]; then
+              python -m twine upload --repository-url "${NEXUS_URL}" "$whl" || echo "::error::Failed to upload $whl"
+            else
+              echo "Skipping $whl (label_studio wheel)"
+            fi
           done
