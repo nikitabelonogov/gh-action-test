@@ -75,9 +75,9 @@ jobs:
       - name: "Upload to Nexus"
         if: always()
         env:
-          NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
-          TWINE_USERNAME: admin
-          TWINE_PASSWORD: "${{ secrets.NEXUS_PASSWORD }}"
+          NEXUS_URL: https://devpi.appx.humansignal.com/root/alpine313/
+          TWINE_USERNAME: root
+          TWINE_PASSWORD: admin
         run: |
           for whl in dist/*.whl; do
             echo "Uploading $whl"
