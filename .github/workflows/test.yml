@@ -2,88 +2,23 @@ name: 'TEST'
 
 on:
   push:
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: 'Git ref'
-        required: false
-        type: string
-
-env:
-  POETRY_VERSION: 2.1.4
 
 jobs:
-  get:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      requirements: ${{ steps.gen-req.outputs.requirements }}
     steps:
-      - uses: actions/checkout@v5
-        with:
-          repository: "Humansignal/label-studio-enterprise"
-          ref: ${{ inputs.ref || 'fb-PLT-841' }}
-          token: ${{ secrets.GIT_PAT }}
+      - name: Check space BEFORE
+        run: df -h
 
-      - name: "Install poetry"
-        run: pipx install "poetry==${{ env.POETRY_VERSION }}"
-
-      - name: "Install poetry-plugin-export"
-        run: poetry self add poetry-plugin-export
-
-      - name: "Generate requirements.txt"
-        id: gen-req
+      - name: Free up disk space
         run: |
-          poetry export -f requirements.txt --without-hashes --output=requirements.txt
-          sed -i 's/ ; .*//g' requirements.txt
-          echo "::group::requirements.txt"
-          cat requirements.txt
-          echo "::endgroup::"
-          echo "requirements<<EOF" >> $GITHUB_OUTPUT
-          cat requirements.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Remove unnecessary system packages
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          
+          # Remove Docker artifacts
+          docker system prune -af --volumes
+          docker builder prune -af
 
-  build_wheels:
-    name: "Build musl wheels and upload to Nexus (${{ matrix.os }})"
-    needs: get
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, ubuntu-24.04-arm ]
-    container:
-      image: python:3.13-alpine
-    steps:
-      - name: "Install Build Dependencies"
-        run: apk add --no-cache build-base gfortran linux-headers libgomp openblas-dev lapack-dev geos-dev openldap-dev librdkafka-dev cmake apache-arrow-dev
-
-      - name: "Create requirements.txt"
-        run: |
-          echo "${{ needs.get.outputs.requirements }}" > requirements.txt
-          cat requirements.txt
-
-      - name: "Build Wheels"
-        env:
-          NEXUS_URL: https://nexus.appx.humansignal.com/repository/alpine/
-        run: |
-          python -m pip wheel -r requirements.txt -w dist/ --extra-index-url "${NEXUS_URL}"
-          ls dist/
-
-      - name: "Install twine"
-        if: always()
-        run: python -m pip install -U twine
-
-      - name: "Upload to Nexus"
-        if: always()
-        env:
-          NEXUS_URL: https://devpi.appx.humansignal.com/root/alpine313/
-          TWINE_USERNAME: root
-          TWINE_PASSWORD: admin
-        run: |
-          for whl in dist/*.whl; do
-            echo "Uploading $whl"
-            if [[ ! $(basename "$whl") =~ ^label_studio.* ]]; then
-              python -m twine upload --repository-url "${NEXUS_URL}" "$whl" || echo "::error::Failed to upload $whl"
-            else
-              echo "Skipping $whl (label_studio wheel)"
-            fi
-          done
+      - name: Check space AFTER
+        run: df -h

@@ -1,2 +1,0 @@
-# gh-action-test
-zalupa 
