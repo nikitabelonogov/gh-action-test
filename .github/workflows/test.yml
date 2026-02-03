@@ -1,62 +1,41 @@
-name: Cursor Code Review
+name: Claude Coverage & Test Generation
 
 on:
   push:
 
 jobs:
-  code-review:
+  generate-tests:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: hmarr/debug-action@v3.0.0
+
+      - name: Run Claude Code for Test Generation
+        uses: anthropics/claude-code-action@v1
         with:
-          token: '${{ secrets.GIT_PAT }}'
-          repository: 'Humansignal/label-studio'
-          fetch-depth: 0
-          ref: 'revert-9028-fb-utc-444-oom-fix'
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_CI_KEY }}
+          claude_args: |
+            --max-turns 5
+            --model claude-sonnet-4-5-20250929
+            --allowedTools Read,Write,Edit,Bash,Glob,Grep,Task
+          prompt: |
+            ## Step 1: Say Hello to the World
+            
+            ## Step 2: Say something interesting about the world
 
-      - name: Install Cursor CLI
-        run: |
-          curl https://cursor.com/install -fsS | bash
-          echo "${HOME}/.cursor/bin" >> "${GITHUB_PATH}"
+      - run: ls
+        continue-on-error: true
 
-      - name: Perform code review
-        env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-          GH_TOKEN: ${{ secrets.GIT_PAT }}
-        run: |
-          cursor-agent --force --model "$MODEL" --output-format=text --print "You are operating in a GitHub Actions runner performing automated code review. The gh CLI is available and authenticated via GH_TOKEN. You may comment on pull requests.
+      - run: ls .claude
+        continue-on-error: true
 
-          Context:
-          - Repo: Humansignal/label-studio
-          - PR Number: 9072
-          - PR Head SHA: cb3acac5f25b9a6f1de5159491874afeaf533f95
-          - PR Base SHA: 84ef3a57ac50d36f596d5130e7890d61669e024f
+      - run: ls .claude/logs
+        continue-on-error: true
 
-          Objectives:
-          1) Re-check existing review comments and reply resolved when addressed
-          2) Review the current PR diff and flag only clear, high-severity issues
-          3) Review only database migrations scripts under label_studio/data_manager/migrations/ directory
-          4) Do not comment on style, formatting, or nitpick issues
-          5) Leave very short inline comments (1-2 sentences) on changed lines only and a brief summary at the end
-
-          Procedure:
-          - Get existing comments: gh pr view --json comments
-          - Get diff: gh pr diff
-          - If a previously reported issue appears fixed by nearby changes, reply: ✅ This issue appears to be resolved by the recent changes
-          - Avoid duplicates: skip if similar feedback already exists on or near the same lines
-
-          Commenting rules:
-          - Max 10 inline comments total; prioritize the most critical issues
-          - One issue per comment; place on the exact changed line
-          - Natural tone, specific and actionable; do not mention automated or high-confidence
-          - Use emojis: 🚨 Critical 🔒 Security ⚡ Performance ⚠️ Logic ✅ Resolved ✨ Improvement
-
-          Submission:
-          - Submit one review containing inline comments plus a concise summary
-          - Use only: gh pr review --comment
-          - Do not use: gh pr review --approve or --request-changes"
+      - name: Archive Claude Logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: claude-logs
+          path: .claude/logs
+          retention-days: 1
