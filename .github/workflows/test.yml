@@ -27,22 +27,10 @@ jobs:
             
             ## Step 2: Say something interesting about the world
 
-      - run: ls ~
-        continue-on-error: true
-
-      - run: ls ~/.claude
-        continue-on-error: true
-
-      - run: ls ~/.claude/logs
-        continue-on-error: true
-
-      - run: echo "${{ github.workspace }}"
-        continue-on-error: true
-
       - name: Archive Claude Logs
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: claude-logs
-          path: /home/runner/work/_temp/claude-execution-output.json
+          path: ~/.claude
           retention-days: 1
