@@ -32,5 +32,5 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: claude-logs
-          path: ~/.claude
+          path: ~/.claude/projects
           retention-days: 1
