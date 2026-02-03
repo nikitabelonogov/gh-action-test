@@ -27,13 +27,13 @@ jobs:
             
             ## Step 2: Say something interesting about the world
 
-      - run: ls
+      - run: ls ~
         continue-on-error: true
 
-      - run: ls .claude
+      - run: ls ~/.claude
         continue-on-error: true
 
-      - run: ls .claude/logs
+      - run: ls ~/.claude/logs
         continue-on-error: true
 
       - run: echo "${{ github.workspace }}"
