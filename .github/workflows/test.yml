@@ -36,5 +36,11 @@ jobs:
           workspace_path: '~/.claude/projects/-home-runner--work-label-studio-enterprise-label-studio-enterprise'
 
       - run: ls '~/'
+        continue-on-error: true
+
       - run: ls '~/.claude/'
+        continue-on-error: true
+
       - run: ls '~/.claude/projects/'
+        continue-on-error: true
+
