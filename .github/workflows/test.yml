@@ -37,10 +37,12 @@ jobs:
 
       - run: ls '~/'
         continue-on-error: true
+        if: always()
 
       - run: ls '~/.claude/'
         continue-on-error: true
+        if: always()
 
       - run: ls '~/.claude/projects/'
         continue-on-error: true
-
+        if: always()
