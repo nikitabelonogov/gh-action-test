@@ -16,5 +16,25 @@ jobs:
           repository: HumanSignal/actions-hub
           path: ./.github/actions-hub
 
+      - name: Run Claude Code for Test Generation
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_CI_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --max-turns 5
+            --model claude-sonnet-4-5-20250929
+            --allowedTools Read,Write,Edit,Bash,Glob,Grep,Task
+          prompt: |
+            ## Step 1: Say Hello to the World
+            
+            ## Step 2: Say something interesting about the world
+
       - name: "Generate Tests"
         uses: ./.github/actions-hub/actions/claude-extract-messages
+        with:
+          workspace_path: '~/.claude/projects/-home-runner--work-label-studio-enterprise-label-studio-enterprise'
+
+      - run: ls '~/'
+      - run: ls '~/.claude/'
+      - run: ls '~/.claude/projects/'
