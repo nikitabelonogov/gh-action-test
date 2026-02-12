@@ -17,4 +17,4 @@ jobs:
           path: ./.github/actions-hub
 
       - name: "Generate Tests"
-        uses: ./.github/actions-hub/claude-extract-messages
+        uses: ./.github/actions-hub/actions/claude-extract-messages
