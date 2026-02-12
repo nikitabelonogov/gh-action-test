@@ -1,36 +1,20 @@
 name: Claude Coverage & Test Generation
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   generate-tests:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      actions: read
-
     steps:
       - uses: hmarr/debug-action@v3.0.0
 
-      - name: Run Claude Code for Test Generation
-        uses: anthropics/claude-code-action@v1
+      - name: "Checkout Actions Hub"
+        uses: actions/checkout@v6
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_CODE_CI_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: |
-            --max-turns 5
-            --model claude-sonnet-4-5-20250929
-            --allowedTools Read,Write,Edit,Bash,Glob,Grep,Task
-          prompt: |
-            ## Step 1: Say Hello to the World
-            
-            ## Step 2: Say something interesting about the world
+          token: ${{ secrets.GIT_PAT }}
+          repository: HumanSignal/actions-hub
+          path: ./.github/actions-hub
 
-      - name: Archive Claude Logs
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: claude-logs
-          path: ~/.claude/projects
-          retention-days: 1
+      - name: "Generate Tests"
+        uses: ./.github/actions-hub/claude-extract-messages
