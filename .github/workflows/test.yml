@@ -1,7 +1,7 @@
 name: Claude Coverage & Test Generation
 
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   generate-tests:
