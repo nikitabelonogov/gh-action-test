@@ -33,16 +33,16 @@ jobs:
       - name: "Generate Tests"
         uses: ./.github/actions-hub/actions/claude-extract-messages
         with:
-          workspace_path: '~/.claude/projects/-home-runner--work-label-studio-enterprise-label-studio-enterprise'
+          workspace_path: ~/.claude/projects/-home-runner--work-label-studio-enterprise-label-studio-enterprise
 
-      - run: ls '~/'
+      - run: ls ~/
         continue-on-error: true
         if: always()
 
-      - run: ls '~/.claude/'
+      - run: ls ~/.claude/
         continue-on-error: true
         if: always()
 
-      - run: ls '~/.claude/projects/'
+      - run: ls ~/.claude/projects/
         continue-on-error: true
         if: always()
